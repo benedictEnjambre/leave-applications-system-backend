@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import com.synacy.leavesmanagement.user.User; // ✅ your own User entity
+import com.synacy.leavesmanagement.user.User;
 
 import java.time.LocalDate;
 
