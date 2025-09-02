@@ -1,0 +1,4 @@
+package com.synacy.leavesmanagement.user;
+
+public class UserRequest {
+}

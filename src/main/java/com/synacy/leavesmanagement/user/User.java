@@ -31,7 +31,7 @@ public class User {
     private String email;
 
     @ManyToOne
-    @JoinColumn(name = "manager_id")
+    @JoinColumn(name = "manager_id",  nullable = true)
     private User manager;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
