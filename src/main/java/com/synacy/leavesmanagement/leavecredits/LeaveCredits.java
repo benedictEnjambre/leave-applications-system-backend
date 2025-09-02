@@ -17,9 +17,6 @@ public class LeaveCredits {
     @SequenceGenerator(name = "leave_credits_sequence", sequenceName = "leave_credits_sequence", allocationSize = 1)
     private Long creditId;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private User user;
 
     @Column(nullable = false)
     private int totalCredits;
