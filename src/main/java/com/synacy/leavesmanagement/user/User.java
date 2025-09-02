@@ -1,5 +1,6 @@
 package com.synacy.leavesmanagement.user;
 
+import com.synacy.leavesmanagement.leavecredits.LeaveCredits;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,6 +12,7 @@ import lombok.Setter;
 @Getter
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
 
     @Id
@@ -32,4 +34,6 @@ public class User {
     @JoinColumn(name = "manager_id")
     private User manager;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private LeaveCredits leaveCredits;
 }
