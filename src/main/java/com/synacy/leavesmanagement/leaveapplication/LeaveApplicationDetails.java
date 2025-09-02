@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class LeaveApplicationDetails {
 
-    private Long applicationId;
+    private Long Id;
     private String employeeName;
     private String approverName;
     private LocalDate startDate;
