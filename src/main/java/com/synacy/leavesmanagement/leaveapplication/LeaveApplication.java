@@ -1,6 +1,7 @@
 package com.synacy.leavesmanagement.leaveapplication;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,12 +14,13 @@ import java.time.LocalDate;
 @Setter
 @Getter
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class LeaveApplication {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "leave_application_sequence")
     @SequenceGenerator(name = "leave_application_sequence", sequenceName = "leave_application_sequence", allocationSize = 1)
-    private Long applicationId;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
