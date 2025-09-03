@@ -1,7 +1,7 @@
 package com.synacy.leavesmanagement.leaveapplication;
 
 import com.synacy.leavesmanagement.user.User;
-import com.synacy.leavesmanagement.user.UserRepository;
+import com.synacy.leavesmanagement.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,29 +11,21 @@ import java.util.List;
 public class LeaveApplicationService {
 
     private final LeaveApplicationRepository leaveApplicationRepository;
-    private final LeaveCreditRepository leaveCreditRepository;
-    private final UserRepository userRepository;
+    private final LeaveCreditService leaveCreditService;
+    private final UserService userService;
 
     @Autowired
-    public LeaveApplicationService(
-            LeaveApplicationRepository leaveApplicationRepository,
-            LeaveCreditRepository leaveCreditRepository,
-            UserRepository userRepository
-    ) {
+    public LeaveApplicationService(LeaveApplicationRepository leaveApplicationRepository, LeaveCreditService leaveCreditService, UserService userService) {
         this.leaveApplicationRepository = leaveApplicationRepository;
-        this.leaveCreditRepository = leaveCreditRepository;
-        this.userRepository = userRepository;
+        this.leaveCreditService = leaveCreditService;
+        this.userService = userService;
     }
 
-    private User findUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"))
-    }
 
     public LeaveApplication applyLeave(Long userId, LeaveApplicationRequest request) {
-        User employee = findUser(userId);
+        User employee = userService.getUserById(userId);
 
-        int requestedDays = leaveCreditRepository.deductCredits(employee, request.getStartDate(), request.getEndDate());
+        int requestedDays = leaveCreditService.deductCredits(employee, request.getStartDate(), request.getEndDate());
         if (requestedDays <= 0) {
             throw new IllegalStateException("Insufficient leave credits");
         }
@@ -59,7 +51,7 @@ public class LeaveApplicationService {
 
 
     public List<LeaveApplicationResponse> getLeaveApplicationsForUser(Long userId) {
-        User user = findUser(userId);
+        User user = userService.getUserById(userId);
 
         List<LeaveApplication> applications;
 
@@ -79,7 +71,7 @@ public class LeaveApplicationService {
 
 
     public LeaveApplicationResponse updateLeaveStatus(Long approverId, Long leaveAppId, LeaveStatus status, String remarks) {
-        User approver = findUser(approverId);
+        User approver = userService.getUserById(approverId);
 
         LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveAppId)
                 .orElseThrow(() -> new IllegalArgumentException("Leave application not found"));
@@ -103,7 +95,7 @@ public class LeaveApplicationService {
 
         // Refund credits if rejected
         if (status == LeaveStatus.REJECTED) {
-            leaveCreditRepository.refundCredits(
+            leaveCreditService.refundCredits(
                     leaveApplication.getEmployee(),
                     leaveApplication.getStartDate(),
                     leaveApplication.getEndDate()
