@@ -52,6 +52,52 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public User updateUser(Long id, UserRequest userRequest) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+
+        // Update name
+        if (userRequest.getName() != null && !userRequest.getName().isBlank()) {
+            if (!existingUser.getName().equals(userRequest.getName())
+                    && userRepository.existsByName(userRequest.getName())) {
+                throw new DuplicateUserNameException(userRequest.getName());
+            }
+            existingUser.setName(userRequest.getName());
+        }
+
+        // Update role
+        if (userRequest.getRole() != null) {
+            existingUser.setRole(userRequest.getRole());
+        }
+
+        // Update manager
+        if (userRequest.getManagerId() != null) {
+            User manager = userRepository.findById(userRequest.getManagerId())
+                    .orElseThrow(() -> new ManagerNotFoundException(userRequest.getManagerId()));
+            existingUser.setManager(manager);
+        } else {
+            existingUser.setManager(null); // explicitly remove manager if null
+        }
+
+        // Update leave credits
+        LeaveCredits leaveCredits = existingUser.getLeaveCredits();
+        if (leaveCredits == null) {
+            leaveCredits = new LeaveCredits();
+        }
+
+        if (userRequest.getTotalCredits() != null) {
+            leaveCredits.setTotalCredits(userRequest.getTotalCredits());
+        }
+        if (userRequest.getRemainingCredits() != null) {
+            leaveCredits.setRemainingCredits(userRequest.getRemainingCredits());
+        }
+
+        existingUser.setLeaveCredits(leaveCredits);
+
+        return userRepository.save(existingUser);
+    }
+
+
     // ✅ Pagination + filters for users
     public Page<User> fetchUsers(int max, int page, Long manager, Integer totalCredits, Integer remainingCredits) {
         Pageable pageable = PageRequest.of(page, max);
@@ -90,5 +136,15 @@ public class UserService {
     public User getHR() {
         return userRepository.findByRole(Role.HR)
                 .orElseThrow(() -> new RoleNotFoundException("HR"));
+    }
+
+    public boolean isHr(User employee) {
+        return employee.getRole().equals(Role.HR);
+    }
+    public boolean isManager(User employee) {
+        return employee.getRole().equals(Role.MANAGER);
+    }
+    public boolean isEmployee(User employee) {
+        return employee.getRole().equals(Role.EMPLOYEE);
     }
 }

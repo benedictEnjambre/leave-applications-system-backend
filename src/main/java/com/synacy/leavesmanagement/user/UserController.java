@@ -21,12 +21,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/api/v1/user")
-    public UserResponse createUser(@RequestBody UserRequest userRequest){
-        User user =  userService.createUser(userRequest);
-        return new UserResponse(user);
-    }
-
     @GetMapping("/api/v1/users")
     public PageResponse<UserResponse> fetchUsers(
             @RequestParam(value = "max", defaultValue = "3") int max,
@@ -54,6 +48,20 @@ public class UserController {
                 page, // keep API 1-based
                 userResponseList
         );
+    }
+    @PostMapping("/api/v1/user")
+    public UserResponse createUser(@RequestBody UserRequest userRequest){
+        User user =  userService.createUser(userRequest);
+        return new UserResponse(user);
+    }
+
+    @PutMapping("/api/v1/user/{id}")
+    public UserResponse updateUser(
+            @PathVariable Long id,
+            @RequestBody UserRequest userRequest
+    ) {
+        User user = userService.updateUser(id, userRequest);
+        return new UserResponse(user);
     }
 
 
