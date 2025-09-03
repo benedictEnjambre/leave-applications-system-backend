@@ -1,4 +1,4 @@
-package com.synacy.leavesmanagement.apierror;
+package com.synacy.leavesmanagement.web.apierror;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

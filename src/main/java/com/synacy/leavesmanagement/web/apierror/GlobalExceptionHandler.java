@@ -1,4 +1,4 @@
-package com.synacy.leavesmanagement.apierror;
+package com.synacy.leavesmanagement.web.apierror;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
