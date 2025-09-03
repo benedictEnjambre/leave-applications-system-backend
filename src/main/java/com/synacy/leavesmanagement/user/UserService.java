@@ -1,5 +1,6 @@
 package com.synacy.leavesmanagement.user;
 
+import com.synacy.leavesmanagement.leavecredits.LeaveCredits;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,13 +14,13 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser (UserRequest userRequest){
+    public User createUser(UserRequest userRequest) {
         // 1. Validate name
         if (userRequest.getName() == null || userRequest.getName().isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
 
-        if (userRepository.existsByName((userRequest.getName()))){
+        if (userRepository.existsByName(userRequest.getName())) {
             throw new DuplicateUserNameException(userRequest.getName());
         }
 
@@ -28,18 +29,24 @@ public class UserService {
             throw new RoleNotFoundException("null");
         }
 
-        // 3. Validate manager (if provided)
-        if (userRequest.getManager() != null &&
-                !userRepository.existsById(userRequest.getManager().getId())) {
-            throw new ManagerNotFoundException(userRequest.getManager().getId());
+        // 3. Get manager (if provided)
+        User manager = null;
+        if (userRequest.getManagerId() != null) {
+            manager = userRepository.findById(userRequest.getManagerId())
+                    .orElseThrow(() -> new ManagerNotFoundException(userRequest.getManagerId()));
         }
 
-        // 4. Create user
+        // 4. Create LeaveCredits
+        LeaveCredits leaveCredits = new LeaveCredits();
+        leaveCredits.setTotalCredits(userRequest.getTotalCredits());
+        leaveCredits.setRemainingCredits(userRequest.getRemainingCredits());
+
+        // 5. Create user
         User user = new User(
                 userRequest.getName(),
                 userRequest.getRole(),
-                userRequest.getManager(),
-                userRequest.getLeaveCredits()
+                manager,
+                leaveCredits
         );
 
         return userRepository.save(user);

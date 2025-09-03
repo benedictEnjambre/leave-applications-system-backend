@@ -6,15 +6,14 @@ import lombok.Getter;
 @Getter
 public class UserResponse {
     private final String name;
-    private final User manager;
+    private final String managerName;
     private final Role role;
-    private final LeaveCredits leaveCredits;
+    //  private final LeaveCredits leaveCredits;
 
     UserResponse(User user) {
         this.name = user.getName();
-        this.manager = user.getManager();
         this.role = user.getRole();
-        this.leaveCredits = user.getLeaveCredits();
+        this.managerName = user.getManager() != null ? user.getManager().getName() : null;
+       // this.leaveCredits = user.getLeaveCredits() != null ? new LeaveCreditsResponse(user.getLeaveCredits()) : null;
     }
-
 }
