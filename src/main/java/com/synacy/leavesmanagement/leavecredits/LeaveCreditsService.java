@@ -1,10 +1,12 @@
 package com.synacy.leavesmanagement.leavecredits;
 
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
+@Setter
 @Service
 public class LeaveCreditsService {
 
@@ -14,16 +16,7 @@ public class LeaveCreditsService {
         this.leaveCreditsRepository = leaveCreditsRepository;
     }
 
-//    // Create leave credits for a new user
-//    public LeaveCredits createCreditsForUser(Long userId, int totalCredits) {
-//        LeaveCredits credits = new LeaveCredits();
-//        credits.setUserId(userId);
-//        credits.setTotalCredits(totalCredits);
-//        credits.setRemainingCredits(totalCredits);
-//        return leaveCreditsRepository.save(credits);
-//    }
-
-    // Count working days (excluding weekends)
+    //  Count working days (excluding weekends)
     public int calculateRequestedDays(LocalDate startDate, LocalDate endDate) {
         int workingDays = 0;
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
@@ -38,36 +31,41 @@ public class LeaveCreditsService {
         return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
-    // Deduct credits when leave is approved
-    public int deductCreditsForApprovedLeave(Long userId, LocalDate startDate, LocalDate endDate) {
-        LeaveCredits credits = leaveCreditsRepository.findByUserId(userId)
+    //  Common method to handle both deduction and restore
+    private int updateCredits(Long userId, LocalDate startDate, LocalDate endDate, boolean isDeduction) {
+        LeaveCredits credits = leaveCreditsRepository.findByUser_UserId(userId)
                 .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
 
-        int daysRequested = calculateRequestedDays(startDate, endDate);
+        int days = calculateRequestedDays(startDate, endDate);
 
-        if (credits.getRemainingCredits() < daysRequested) {
-            throw new InsufficientCreditsException(userId, daysRequested, credits.getRemainingCredits());
+        if (isDeduction) {
+
+            // Deduct immediately when applying for leave
+            if (credits.getRemainingCredits() < days) {
+                throw new InsufficientCreditsException(userId, days, credits.getRemainingCredits());
+            }
+            credits.setRemainingCredits(credits.getRemainingCredits() - days);
+        } else {
+
+            // Restore credits if leave request is rejected
+            int newBalance = credits.getRemainingCredits() + days;
+            if (newBalance > credits.getTotalCredits()) {
+                newBalance = credits.getTotalCredits();
+            }
+            credits.setRemainingCredits(newBalance);
         }
 
-        credits.setRemainingCredits(credits.getRemainingCredits() - daysRequested);
         leaveCreditsRepository.save(credits);
-
         return credits.getRemainingCredits();
     }
 
-    // Restore credits if leave is canceled
-    public void restoreCreditsForCanceledLeave(Long userId, LocalDate startDate, LocalDate endDate) {
-        LeaveCredits credits = leaveCreditsRepository.findByUserId(userId)
-                .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
+    // Deduct credits when user applies for leave
+    public int deductCreditsForRequestedLeave(Long userId, LocalDate startDate, LocalDate endDate) {
+        return updateCredits(userId, startDate, endDate, true);
+    }
 
-        int daysToRestore = calculateRequestedDays(startDate, endDate);
-
-        int newBalance = credits.getRemainingCredits() + daysToRestore;
-        if (newBalance > credits.getTotalCredits()) {
-            newBalance = credits.getTotalCredits();
-        }
-
-        credits.setRemainingCredits(newBalance);
-        leaveCreditsRepository.save(credits);
+    //  Restore credits if leave is rejected
+    public int restoreCreditsForRejectedLeave(Long userId, LocalDate startDate, LocalDate endDate) {
+        return updateCredits(userId, startDate, endDate, false);
     }
 }

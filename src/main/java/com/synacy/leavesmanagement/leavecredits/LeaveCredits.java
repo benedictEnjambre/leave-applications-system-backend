@@ -18,6 +18,9 @@ public class LeaveCredits {
     private Long creditId;
 
 
+    @OneToOne(mappedBy = "leaveCredits")
+    private User user;
+
     @Column(nullable = false)
     private int totalCredits;
 
