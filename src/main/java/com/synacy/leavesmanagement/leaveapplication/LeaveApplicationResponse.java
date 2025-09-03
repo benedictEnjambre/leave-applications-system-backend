@@ -15,14 +15,14 @@ public class LeaveApplicationResponse {
     private final LeaveStatus status;
     private final String remarks;
 
-    public LeaveApplicationResponse(LeaveApplicationDetails leaveApplicationDetails) {
-        this.id = leaveApplicationDetails.getId();
-        this.employeeName = leaveApplicationDetails.getEmployeeName();
-        this.approverName = leaveApplicationDetails.getApproverName();
-        this.startDate = leaveApplicationDetails.getStartDate();
-        this.endDate = leaveApplicationDetails.getEndDate();
-        this.leaveType = leaveApplicationDetails.getLeaveType();
-        this.status = leaveApplicationDetails.getStatus();
-        this.remarks = leaveApplicationDetails.getRemarks();
+    public LeaveApplicationResponse(LeaveApplication leaveApplication) {
+        this.id = leaveApplication.getId();
+        this.employeeName = leaveApplication.getEmployeeName();
+        this.approverName = leaveApplication.getApproverName();
+        this.startDate = leaveApplication.getStartDate();
+        this.endDate = leaveApplication.getEndDate();
+        this.leaveType = leaveApplication.getLeaveType();
+        this.status = leaveApplication.getStatus();
+        this.remarks = leaveApplication.getRemarks();
     }
 }

@@ -38,16 +38,16 @@ public class LeaveApplication {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private LeaveStatus status;
+    private LeaveStatus status = LeaveStatus.PENDING;
 
     @ManyToOne
-    @JoinColumn(name = "approver_id", nullable = false)
+    @JoinColumn(name = "approver_id", nullable = true)
     private User approver;
 
     private String remarks;
 
     public LeaveApplication(LocalDate startDate, LocalDate endDate,
-                            LeaveType leaveType, LeaveStatus status, String remarks) {
+                            LeaveType leaveType, String remarks) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.leaveType = leaveType;
