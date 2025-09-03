@@ -1,5 +1,8 @@
 package com.synacy.leavesmanagement.user;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,13 +45,43 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /*
-    *
-    * Role dosent exists execption
-    * Name is taken execptions like i dont know if this is a exception but it whousl be some warning no? since 2 people with same name
-    * waht could we do with that
-    *
-    *manager dosent exits
-    *
-    * */
+    // ✅ Pagination + filters for users
+    public Page<User> fetchUsers(int max, int page, Long manager, Integer totalCredits, Integer remainingCredits) {
+        Pageable pageable = PageRequest.of(page, max);
+
+        if (manager != null) {
+            return userRepository.findByManager_Id(manager, pageable);
+        }
+
+        if (totalCredits != null) {
+            return userRepository.findByLeaveCredits_TotalCredits(totalCredits, pageable);
+        }
+
+        if (remainingCredits != null) {
+            return userRepository.findByLeaveCredits_RemainingCredits(remainingCredits, pageable);
+        }
+
+        // default: no filters
+        return userRepository.findAll(pageable);
+    }
+
+    // 🔹 Get a user by ID
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    // 🔹 Get the manager of a given employee
+    public User getManager(User employee) {
+        if (employee.getManager() == null) {
+            throw new ManagerNotFoundException(null);
+        }
+        return getUserById(employee.getManager().getId());
+    }
+
+    // 🔹 Get an HR user (assuming role is stored in a Role enum or String)
+    public User getHR() {
+        return userRepository.findByRole(Role.HR)
+                .orElseThrow(() -> new RoleNotFoundException("HR"));
+    }
 }
