@@ -1,5 +1,9 @@
 package com.synacy.leavesmanagement.user;
 
+import com.synacy.leavesmanagement.leavecredits.LeaveCredits;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -10,13 +14,13 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createUser (UserRequest userRequest){
+    public User createUser(UserRequest userRequest) {
         // 1. Validate name
         if (userRequest.getName() == null || userRequest.getName().isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
 
-        if (userRepository.existsByName((userRequest.getName()))){
+        if (userRepository.existsByName(userRequest.getName())) {
             throw new DuplicateUserNameException(userRequest.getName());
         }
 
@@ -25,30 +29,66 @@ public class UserService {
             throw new RoleNotFoundException("null");
         }
 
-        // 3. Validate manager (if provided)
-        if (userRequest.getManager() != null &&
-                !userRepository.existsById(userRequest.getManager().getId())) {
-            throw new ManagerNotFoundException(userRequest.getManager().getId());
+        // 3. Get manager (if provided)
+        User manager = null;
+        if (userRequest.getManagerId() != null) {
+            manager = userRepository.findById(userRequest.getManagerId())
+                    .orElseThrow(() -> new ManagerNotFoundException(userRequest.getManagerId()));
         }
 
-        // 4. Create user
+        // 4. Create LeaveCredits
+        LeaveCredits leaveCredits = new LeaveCredits();
+        leaveCredits.setTotalCredits(userRequest.getTotalCredits());
+        leaveCredits.setRemainingCredits(userRequest.getRemainingCredits());
+
+        // 5. Create user
         User user = new User(
                 userRequest.getName(),
                 userRequest.getRole(),
-                userRequest.getManager(),
-                userRequest.getLeaveCredits()
+                manager,
+                leaveCredits
         );
 
         return userRepository.save(user);
     }
 
-    /*
-    *
-    * Role dosent exists execption
-    * Name is taken execptions like i dont know if this is a exception but it whousl be some warning no? since 2 people with same name
-    * waht could we do with that
-    *
-    *manager dosent exits
-    *
-    * */
+    // ✅ Pagination + filters for users
+    public Page<User> fetchUsers(int max, int page, Long manager, Integer totalCredits, Integer remainingCredits) {
+        Pageable pageable = PageRequest.of(page, max);
+
+        if (manager != null) {
+            return userRepository.findByManager_Id(manager, pageable);
+        }
+
+        if (totalCredits != null) {
+            return userRepository.findByLeaveCredits_TotalCredits(totalCredits, pageable);
+        }
+
+        if (remainingCredits != null) {
+            return userRepository.findByLeaveCredits_RemainingCredits(remainingCredits, pageable);
+        }
+
+        // default: no filters
+        return userRepository.findAll(pageable);
+    }
+
+    // 🔹 Get a user by ID
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    // 🔹 Get the manager of a given employee
+    public User getManager(User employee) {
+        if (employee.getManager() == null) {
+            throw new ManagerNotFoundException(null);
+        }
+        return getUserById(employee.getManager().getId());
+    }
+
+    // 🔹 Get an HR user (assuming role is stored in a Role enum or String)
+    public User getHR() {
+        return userRepository.findByRole(Role.HR)
+                .orElseThrow(() -> new RoleNotFoundException("HR"));
+    }
 }
