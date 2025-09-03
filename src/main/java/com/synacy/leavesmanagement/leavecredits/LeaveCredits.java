@@ -17,7 +17,6 @@ public class LeaveCredits {
     @SequenceGenerator(name = "leave_credits_sequence", sequenceName = "leave_credits_sequence", allocationSize = 1)
     private Long creditId;
 
-
     @OneToOne(mappedBy = "leaveCredits")
     private User user;
 
