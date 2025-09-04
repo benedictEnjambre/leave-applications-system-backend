@@ -8,8 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import com.synacy.leavesmanagement.user.Role;
 
 @Service
 public class LeaveApplicationService {
@@ -52,29 +51,42 @@ public class LeaveApplicationService {
                 ? employee.getManager()
                 : userService.getHR();
     }
+
+    // Employee's own leaves
+    public Page<LeaveApplication> fetchOwnLeaveApplication(Long userId, int page, int max) {
+        Pageable pageable = PageRequest.of(page - 1, max);
+
+        User employee = userService.getUserById(userId);
+        if (employee.getRole() != Role.EMPLOYEE && employee.getRole() != Role.MANAGER && employee.getRole() != Role.HR) {
+            throw new AccessDeniedException("Invalid role for fetching own leave applications.");
+        }
+        return leaveApplicationRepository.findByEmployee(employee, pageable);
+    }
+
+    // Manager: leaves of their team
+    public Page<LeaveApplication> fetchTeamLeaveApplication(Long userId, int page, int max) {
+        Pageable pageable = PageRequest.of(page - 1, max);
+
+        User manager = userService.getUserById(userId);
+        if (manager.getRole() != Role.MANAGER) {
+            throw new AccessDeniedException("Only Managers can fetch team leave applications.");
+        }
+        return leaveApplicationRepository.findByApprover(manager, pageable);
+    }
+
+    // HR: all leaves
+    public Page<LeaveApplication> fetchAllLeaveApplication(Long userId, int page, int max) {
+        Pageable pageable = PageRequest.of(page - 1, max);
+
+        User hr = userService.getUserById(userId);
+        if (hr.getRole() != Role.HR) {
+            throw new AccessDeniedException("Only HR can fetch all leave applications.");
+        }
+
+        return leaveApplicationRepository.findAll(pageable);
+    }
 }
 
-//    // Employee's own leaves
-//    public Page<LeaveApplicationResponse> fetchOwnLeaveApplication(Long employeeId, Pageable pageable) {
-//        User employee = userService.getUserById(employeeId);
-//        Page<LeaveApplication> applications = leaveApplicationRepository.findByEmployee(employee, pageable);
-//        return applications.map(LeaveApplicationResponse::new);
-//    }
-//
-//    // Manager: leaves of their team
-//    public Page<LeaveApplicationResponse> fetchTeamLeaveApplication(Long managerId, Pageable pageable) {
-//        User manager = userService.getUserById(managerId);
-//        Page<LeaveApplication> applications = leaveApplicationRepository.findByApprover(manager, pageable);
-//        return applications.map(LeaveApplicationResponse::new);
-//    }
-//
-//    // HR: all leaves
-//    public Page<LeaveApplicationResponse> FetchAllLeaveApplication(Pageable pageable) {
-//        Page<LeaveApplication> applications = leaveApplicationRepository.findAll(pageable);
-//        return applications.map(LeaveApplicationResponse::new);
-//    }
-//
-//
 //    public LeaveApplicationResponse updateLeaveStatus(Long approverId, Long leaveAppId, LeaveStatus status, String remarks) {
 //        User approver = userService.getUserById(approverId);
 //
