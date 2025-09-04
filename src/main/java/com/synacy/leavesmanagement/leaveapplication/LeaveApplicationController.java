@@ -45,15 +45,15 @@ public class LeaveApplicationController {
 
     @GetMapping("/api/v1/leave-application/{userId}/team")
     public PageResponse<LeaveApplicationResponse> fetchTeamLeave(@PathVariable Long userId,
-                                                                @RequestParam(value = "page", defaultValue = "1") int page,
-                                                                @RequestParam(value = "max", defaultValue = "5") int max) {
+                                                                 @RequestParam(value = "page", defaultValue = "1") int page,
+                                                                 @RequestParam(value = "max", defaultValue = "5") int max) {
         return buildPageResponse(leaveApplicationService.fetchTeamLeaveApplication(userId, page, max), page);
     }
 
     @GetMapping("/api/v1/leave-application/{userId}/all")
     public PageResponse<LeaveApplicationResponse> fetchAllLeave(@PathVariable Long userId,
-                                                                 @RequestParam(value = "page", defaultValue = "1") int page,
-                                                                 @RequestParam(value = "max", defaultValue = "5") int max) {
+                                                                @RequestParam(value = "page", defaultValue = "1") int page,
+                                                                @RequestParam(value = "max", defaultValue = "5") int max) {
         return buildPageResponse(leaveApplicationService.fetchAllLeaveApplication(userId, page, max), page);
     }
 
@@ -82,12 +82,8 @@ public class LeaveApplicationController {
 
     @PatchMapping("api/v1/leave-application/{userId}/{leaveId}/reject")
     public LeaveApplicationResponse rejectLeave(@PathVariable Long userId,
-                                                 @PathVariable Long leaveId) {
+                                                @PathVariable Long leaveId) {
         LeaveApplication application = leaveApplicationService.rejectLeave(userId, leaveId);
         return new LeaveApplicationResponse(application);
     }
-
-
-
-
 }
