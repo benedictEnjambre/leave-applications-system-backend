@@ -75,7 +75,8 @@ public class LeaveCreditsService {
     }
 
     // Update existing user credits
-    // 🔹 Update existing credits safely
+
+    // Update existing credits with proper validation
     public LeaveCredits updateCredits(LeaveCredits existing,
                                       Integer totalCredits,
                                       Integer remainingCredits) {
@@ -83,15 +84,34 @@ public class LeaveCreditsService {
             existing = new LeaveCredits();
         }
 
+        // Get current values for validation
+        int currentTotal = existing.getTotalCredits();
+        int currentRemaining = existing.getRemainingCredits();
+
+        // Update total if provided
         if (totalCredits != null) {
             existing.setTotalCredits(totalCredits);
+            currentTotal = totalCredits;
+
+            // If new total is less than current remaining, adjust remaining
+            if (currentRemaining > totalCredits) {
+                existing.setRemainingCredits(totalCredits);
+                currentRemaining = totalCredits;
+            }
         }
+
+        // Update remaining if provided
         if (remainingCredits != null) {
-            // prevent setting higher than total
-            int adjusted = (totalCredits != null && remainingCredits > totalCredits)
-                    ? totalCredits
-                    : remainingCredits;
-            existing.setRemainingCredits(adjusted);
+            if (remainingCredits > currentTotal) {
+                throw new IllegalArgumentException(
+                        String.format("Remaining credits (%d) cannot exceed total credits (%d)",
+                                remainingCredits, currentTotal)
+                );
+            }
+            if (remainingCredits < 0) {
+                throw new IllegalArgumentException("Remaining credits cannot be negative");
+            }
+            existing.setRemainingCredits(remainingCredits);
         }
 
         return existing;
