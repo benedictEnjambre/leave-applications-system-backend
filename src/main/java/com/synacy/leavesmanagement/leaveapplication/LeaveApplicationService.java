@@ -3,7 +3,6 @@ package com.synacy.leavesmanagement.leaveapplication;
 import com.synacy.leavesmanagement.leavecredits.LeaveCreditsService;
 import com.synacy.leavesmanagement.user.User;
 import com.synacy.leavesmanagement.user.UserService;
-import com.synacy.leavesmanagement.web.apierror.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -86,95 +85,66 @@ public class LeaveApplicationService {
 
         return leaveApplicationRepository.findAll(pageable);
     }
-
-    public LeaveApplication cancelLeave(Long userId, Long leaveApplicationId) {
-        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new LeaveApplicationNotFoundException(leaveApplicationId));
-
-        // ✅ Ensure only the employee who applied can cancel
-        if (!leaveApplication.getEmployee().getId().equals(userId)) {
-            throw new AccessDeniedException("You can only cancel your own leave.");
-        }
-
-        // ✅ Prevent canceling already rejected or cancelled applications
-        if (leaveApplication.getStatus() == LeaveStatus.REJECTED ||
-                leaveApplication.getStatus() == LeaveStatus.CANCELLED) {
-            throw new InvalidLeaveOperationException("Cannot cancel rejected or already cancelled leave.");
-        }
-
-
-        leaveApplication.setStatus(LeaveStatus.CANCELLED);
-        leaveCreditsService.refundCredits(
-                userId,
-                leaveApplication.getStartDate(),
-                leaveApplication.getEndDate()
-        );
-        return leaveApplicationRepository.save(leaveApplication);
-    }
-
-//    public LeaveApplication rejectLeave(Long managerId, Long leaveApplicationId) {
-//        User manager = userService.getUserById(managerId);
-//        if (manager.getRole() != Role.MANAGER && manager.getRole() != Role.HR) {
-//            throw new AccessDeniedException("Only Managers or HR can reject leave applications.");
-//        }
-//
-//        LeaveApplication application = leaveApplicationRepository.findById(leaveApplicationId)
-//                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-//
-//        application.setStatus(LeaveStatus.REJECTED);
-//        return leaveApplicationRepository.save(application);
-//    }
-//
-//    public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
-//        User manager = userService.getUserById(managerId);
-//        if (manager.getRole() != Role.MANAGER && manager.getRole() != Role.HR) {
-//            throw new AccessDeniedException("Only Managers or HR can approve leave applications.");
-//        }
-//
-//        LeaveApplication application = leaveApplicationRepository.findById(leaveApplicationId)
-//                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-//
-//        application.setStatus(LeaveStatus.APPROVED);
-//        return leaveApplicationRepository.save(application);
-//    }
-
-    // Private helper to handle access check and status update
-    private LeaveApplication updateLeaveStatus(Long managerId, Long leaveApplicationId, LeaveStatus status) {
-        User manager = userService.getUserById(managerId);
-        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-
-        User employee = leaveApplication.getEmployee();
-        boolean isHr = manager.getRole() == Role.HR;
-        boolean isDirectManager = manager.getRole() == Role.MANAGER && employee.getManager().getId().equals(managerId);
-
-        if (!isHr && !isDirectManager) {
-            throw new AccessDeniedException("Only the employee's direct manager or HR can process this leave.");
-        }
-
-        leaveApplication.setStatus(status);
-        return leaveApplicationRepository.save(leaveApplication);
-
-    }
-
-    public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
-        return updateLeaveStatus(managerId, leaveApplicationId, LeaveStatus.APPROVED);
-    }
-
-    public LeaveApplication rejectLeave(Long managerId, Long leaveApplicationId) {
-        LeaveApplication leaveApplication = updateLeaveStatus(managerId, leaveApplicationId, LeaveStatus.REJECTED);
-        leaveCreditsService.refundCredits(
-                leaveApplication.getEmployee().getId(),
-                leaveApplication.getStartDate(),
-                leaveApplication.getEndDate()
-        );
-
-        return leaveApplication;
-    }
-
-
-
-
-
-
 }
+
+//    public LeaveApplicationResponse updateLeaveStatus(Long approverId, Long leaveAppId, LeaveStatus status, String remarks) {
+//        User approver = userService.getUserById(approverId);
+//
+//        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveAppId)
+//                .orElseThrow(() -> new IllegalArgumentException("Leave application not found"));
+//
+//        // Validation: Employee leave → Manager or HR; Manager/HR leave → HR only
+//        if (leaveApplication.getApprover() != null) {
+//            // Approver is the manager
+//            if (!approver.equals(leaveApplication.getApprover()) && !approver.getRole().isHR()) {
+//                throw new IllegalStateException("You are not authorized to approve/reject this leave");
+//            }
+//        } else {
+//            // Approver is null → only HR can act
+//            if (!approver.getRole().isHR()) {
+//                throw new IllegalStateException("Only HR can approve/reject this leave");
+//            }
+//        }
+//
+//        leaveApplication.setStatus(status);
+//        leaveApplication.setRemarks(remarks);
+//        leaveApplicationRepository.save(leaveApplication);
+//
+//        // Refund credits if rejected
+//        if (status == LeaveStatus.REJECTED) {
+//            leaveCreditsService.refundCredits(
+//                    leaveApplication.getEmployee(),
+//                    leaveApplication.getStartDate(),
+//                    leaveApplication.getEndDate()
+//            );
+//        }
+//
+//        return new LeaveApplicationResponse(leaveApplication);
+//    }
+//
+//
+//    public LeaveApplicationResponse cancelLeave(Long userId, Long leaveAppId) {
+//        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveAppId)
+//                .orElseThrow(() -> new IllegalArgumentException("Leave application not found"));
+//
+//        if (!leaveApplication.getEmployee().getId().equals(userId)) {
+//            throw new IllegalStateException("You cannot cancel someone else's leave");
+//        }
+//
+//        if (leaveApplication.getStatus() != LeaveStatus.PENDING) {
+//            throw new IllegalStateException("Only pending leaves can be cancelled");
+//        }
+//
+//        // Refund credits on cancel
+//        leaveCreditsService.refundCredits(
+//                leaveApplication.getEmployee(),
+//                leaveApplication.getStartDate(),
+//                leaveApplication.getEndDate()
+//        );
+//
+//        leaveApplication.setStatus(LeaveStatus.CANCELLED);
+//        leaveApplicationRepository.save(leaveApplication);
+//
+//        return new LeaveApplicationResponse(leaveApplication);
+//    }
+//}
