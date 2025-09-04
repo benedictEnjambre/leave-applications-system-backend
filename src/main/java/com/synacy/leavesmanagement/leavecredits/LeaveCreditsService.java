@@ -1,5 +1,6 @@
 package com.synacy.leavesmanagement.leavecredits;
 
+import com.synacy.leavesmanagement.user.User;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -29,7 +30,7 @@ public class LeaveCreditsService {
         return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
-    // Deduct credits when leave is requested
+    //  Deduct credits when leave is requested
     public int deductCredits(Long userId, LocalDate startDate, LocalDate endDate) {
         LeaveCredits credits = getCreditsOrThrow(userId);
         int days = calculateRequestedDays(startDate, endDate);
@@ -60,10 +61,37 @@ public class LeaveCreditsService {
         return credits.getRemainingCredits();
     }
 
+    //  Factory method for initializing new user credits
+    public LeaveCredits newUserCredits(Integer totalCredits, Integer remainingCredits) {
+        LeaveCredits credits = new LeaveCredits();
+
+        int defaultTotal = (totalCredits != null) ? totalCredits : 15;
+        int defaultRemaining = (remainingCredits != null) ? remainingCredits : defaultTotal;
+
+        credits.setTotalCredits(defaultTotal);
+        credits.setRemainingCredits(defaultRemaining);
+
+        return credits; // save handled by cascade in User
+    }
+
+    // Update existing user credits (e.g. HR/manager edits)
+    public void updateUserCredits(User user, Integer totalCredits, Integer remainingCredits) {
+        LeaveCredits credits = user.getLeaveCredits();
+        if (credits == null) {
+            credits = new LeaveCredits();
+        }
+        if (totalCredits != null) {
+            credits.setTotalCredits(totalCredits);
+        }
+        if (remainingCredits != null) {
+            credits.setRemainingCredits(remainingCredits);
+        }
+        user.setLeaveCredits(credits);
+    }
+
     //  Private helper to fetch LeaveCredits or throw exception
     private LeaveCredits getCreditsOrThrow(Long userId) {
         return leaveCreditsRepository.findByUserId(userId)
                 .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
     }
 }
-
