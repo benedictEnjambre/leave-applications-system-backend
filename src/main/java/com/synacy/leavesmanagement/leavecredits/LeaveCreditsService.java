@@ -75,18 +75,26 @@ public class LeaveCreditsService {
     }
 
     // Update existing user credits
-    public void updateUserCredits(User user, Integer totalCredits, Integer remainingCredits) {
-        LeaveCredits credits = user.getLeaveCredits();
-        if (credits == null) {
-            credits = new LeaveCredits();
+    // 🔹 Update existing credits safely
+    public LeaveCredits updateCredits(LeaveCredits existing,
+                                      Integer totalCredits,
+                                      Integer remainingCredits) {
+        if (existing == null) {
+            existing = new LeaveCredits();
         }
+
         if (totalCredits != null) {
-            credits.setTotalCredits(totalCredits);
+            existing.setTotalCredits(totalCredits);
         }
         if (remainingCredits != null) {
-            credits.setRemainingCredits(remainingCredits);
+            // prevent setting higher than total
+            int adjusted = (totalCredits != null && remainingCredits > totalCredits)
+                    ? totalCredits
+                    : remainingCredits;
+            existing.setRemainingCredits(adjusted);
         }
-        user.setLeaveCredits(credits);
+
+        return existing;
     }
 
     //  Private helper to fetch LeaveCredits or throw exception
