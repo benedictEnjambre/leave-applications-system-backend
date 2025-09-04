@@ -61,7 +61,7 @@ public class LeaveCreditsService {
         return credits.getRemainingCredits();
     }
 
-    //  Factory method for initializing new user credits
+    // 🔹 Factory method for initializing new user credits
     public LeaveCredits newUserCredits(Integer totalCredits, Integer remainingCredits) {
         LeaveCredits credits = new LeaveCredits();
 
@@ -71,10 +71,10 @@ public class LeaveCreditsService {
         credits.setTotalCredits(defaultTotal);
         credits.setRemainingCredits(defaultRemaining);
 
-        return credits; // save handled by cascade in User
+        return credits;
     }
 
-    // Update existing user credits (e.g. HR/manager edits)
+    // Update existing user credits
     public void updateUserCredits(User user, Integer totalCredits, Integer remainingCredits) {
         LeaveCredits credits = user.getLeaveCredits();
         if (credits == null) {
