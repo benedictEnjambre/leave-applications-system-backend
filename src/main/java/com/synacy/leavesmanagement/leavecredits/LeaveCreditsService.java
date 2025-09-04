@@ -60,9 +60,10 @@ public class LeaveCreditsService {
         return credits.getRemainingCredits();
     }
 
-    // ✅ Private helper to fetch LeaveCredits or throw exception
+    //  Private helper to fetch LeaveCredits or throw exception
     private LeaveCredits getCreditsOrThrow(Long userId) {
         return leaveCreditsRepository.findByUserId(userId)
                 .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
     }
 }
+
