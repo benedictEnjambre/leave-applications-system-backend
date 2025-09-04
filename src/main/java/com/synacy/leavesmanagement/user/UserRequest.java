@@ -10,7 +10,7 @@ public class UserRequest {
     private String name;
     private Role role;
     private Long managerId; // instead of full User
-    private int totalCredits;
-    private int remainingCredits;
+    private Integer totalCredits;     // 🔹 now nullable
+    private Integer remainingCredits; // 🔹 now nullable
 }
 
