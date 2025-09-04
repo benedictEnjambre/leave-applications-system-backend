@@ -7,8 +7,6 @@ import java.time.LocalDate;
 public class LeaveApplicationResponse {
 
     private final Long id;
-    private final String employeeName;
-    private final String approverName;
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final LeaveType leaveType;
@@ -17,8 +15,6 @@ public class LeaveApplicationResponse {
 
     public LeaveApplicationResponse(LeaveApplication leaveApplication) {
         this.id = leaveApplication.getId();
-        this.employeeName = leaveApplication.getEmployeeName();
-        this.approverName = leaveApplication.getApproverName();
         this.startDate = leaveApplication.getStartDate();
         this.endDate = leaveApplication.getEndDate();
         this.leaveType = leaveApplication.getLeaveType();
