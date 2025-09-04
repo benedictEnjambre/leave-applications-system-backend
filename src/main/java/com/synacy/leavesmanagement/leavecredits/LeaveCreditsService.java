@@ -1,5 +1,6 @@
 package com.synacy.leavesmanagement.leavecredits;
 
+import com.synacy.leavesmanagement.user.User;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -14,8 +15,7 @@ public class LeaveCreditsService {
         this.leaveCreditsRepository = leaveCreditsRepository;
     }
 
-
-//      Count working days (excluding weekends)
+    // Count working days (excluding weekends)
     public int calculateRequestedDays(LocalDate startDate, LocalDate endDate) {
         int workingDays = 0;
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
@@ -30,31 +30,68 @@ public class LeaveCreditsService {
         return day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY;
     }
 
-
-//      Update leave credits: deduct when applying, restore if rejected
-
-    public int updateCredits(Long userId, LocalDate startDate, LocalDate endDate, boolean isDeduction) {
-        LeaveCredits credits = leaveCreditsRepository.findByUser_UserId(userId)
-                .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
-
+    //  Deduct credits when leave is requested
+    public int deductCredits(Long userId, LocalDate startDate, LocalDate endDate) {
+        LeaveCredits credits = getCreditsOrThrow(userId);
         int days = calculateRequestedDays(startDate, endDate);
 
-        if (isDeduction) {
-            // Deduct immediately when applying
-            if (credits.getRemainingCredits() < days) {
-                throw new InsufficientCreditsException(userId, days, credits.getRemainingCredits());
-            }
-            credits.setRemainingCredits(credits.getRemainingCredits() - days);
-        } else {
-            // Restore if leave request is rejected
-            int newBalance = credits.getRemainingCredits() + days;
-            if (newBalance > credits.getTotalCredits()) {
-                newBalance = credits.getTotalCredits();
-            }
-            credits.setRemainingCredits(newBalance);
+        if (credits.getRemainingCredits() < days) {
+            throw new InsufficientCreditsException(userId, days, credits.getRemainingCredits());
         }
 
+        credits.setRemainingCredits(credits.getRemainingCredits() - days);
         leaveCreditsRepository.save(credits);
+
         return credits.getRemainingCredits();
+    }
+
+    // Restore credits if leave is canceled/rejected
+    public int refundCredits(Long userId, LocalDate startDate, LocalDate endDate) {
+        LeaveCredits credits = getCreditsOrThrow(userId);
+        int days = calculateRequestedDays(startDate, endDate);
+
+        int newBalance = credits.getRemainingCredits() + days;
+        if (newBalance > credits.getTotalCredits()) {
+            newBalance = credits.getTotalCredits();
+        }
+
+        credits.setRemainingCredits(newBalance);
+        leaveCreditsRepository.save(credits);
+
+        return credits.getRemainingCredits();
+    }
+
+    // 🔹 Factory method for initializing new user credits
+    public LeaveCredits newUserCredits(Integer totalCredits, Integer remainingCredits) {
+        LeaveCredits credits = new LeaveCredits();
+
+        int defaultTotal = (totalCredits != null) ? totalCredits : 15;
+        int defaultRemaining = (remainingCredits != null) ? remainingCredits : defaultTotal;
+
+        credits.setTotalCredits(defaultTotal);
+        credits.setRemainingCredits(defaultRemaining);
+
+        return credits;
+    }
+
+    // Update existing user credits
+    public void updateUserCredits(User user, Integer totalCredits, Integer remainingCredits) {
+        LeaveCredits credits = user.getLeaveCredits();
+        if (credits == null) {
+            credits = new LeaveCredits();
+        }
+        if (totalCredits != null) {
+            credits.setTotalCredits(totalCredits);
+        }
+        if (remainingCredits != null) {
+            credits.setRemainingCredits(remainingCredits);
+        }
+        user.setLeaveCredits(credits);
+    }
+
+    //  Private helper to fetch LeaveCredits or throw exception
+    private LeaveCredits getCreditsOrThrow(Long userId) {
+        return leaveCreditsRepository.findByUserId(userId)
+                .orElseThrow(() -> new LeaveCreditsNotFoundException(userId));
     }
 }
