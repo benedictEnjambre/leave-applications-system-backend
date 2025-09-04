@@ -75,18 +75,46 @@ public class LeaveCreditsService {
     }
 
     // Update existing user credits
-    public void updateUserCredits(User user, Integer totalCredits, Integer remainingCredits) {
-        LeaveCredits credits = user.getLeaveCredits();
-        if (credits == null) {
-            credits = new LeaveCredits();
+
+    // Update existing credits with proper validation
+    public LeaveCredits updateCredits(LeaveCredits existing,
+                                      Integer totalCredits,
+                                      Integer remainingCredits) {
+        if (existing == null) {
+            existing = new LeaveCredits();
         }
+
+        // Get current values for validation
+        int currentTotal = existing.getTotalCredits();
+        int currentRemaining = existing.getRemainingCredits();
+
+        // Update total if provided
         if (totalCredits != null) {
-            credits.setTotalCredits(totalCredits);
+            existing.setTotalCredits(totalCredits);
+            currentTotal = totalCredits;
+
+            // If new total is less than current remaining, adjust remaining
+            if (currentRemaining > totalCredits) {
+                existing.setRemainingCredits(totalCredits);
+                currentRemaining = totalCredits;
+            }
         }
+
+        // Update remaining if provided
         if (remainingCredits != null) {
-            credits.setRemainingCredits(remainingCredits);
+            if (remainingCredits > currentTotal) {
+                throw new IllegalArgumentException(
+                        String.format("Remaining credits (%d) cannot exceed total credits (%d)",
+                                remainingCredits, currentTotal)
+                );
+            }
+            if (remainingCredits < 0) {
+                throw new IllegalArgumentException("Remaining credits cannot be negative");
+            }
+            existing.setRemainingCredits(remainingCredits);
         }
-        user.setLeaveCredits(credits);
+
+        return existing;
     }
 
     //  Private helper to fetch LeaveCredits or throw exception
