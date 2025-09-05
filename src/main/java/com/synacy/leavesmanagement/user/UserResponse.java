@@ -8,9 +8,11 @@ public class UserResponse {
     private final String name;
     private final String managerName;
     private final Role role;
+    private final long id;
     //  private final LeaveCredits leaveCredits;
 
     UserResponse(User user) {
+        this.id = user.getId();
         this.name = user.getName();
         this.role = user.getRole();
         this.managerName = user.getManager() != null ? user.getManager().getName() : null;

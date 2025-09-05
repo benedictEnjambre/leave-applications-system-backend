@@ -34,12 +34,8 @@ public class UserService {
             throw new RoleNotFoundException("null");
         }
 
-        // 3. Get manager (if provided)
-        User manager = null;
-        if (userRequest.getManagerId() != null) {
-            manager = userRepository.findById(userRequest.getManagerId())
-                    .orElseThrow(() -> new ManagerNotFoundException(userRequest.getManagerId()));
-        }
+        // 3. Validate manager (if any)
+        User manager = validateAndGetManager(userRequest.getManagerId());
 
         // 4. Delegate leave credits setup
         LeaveCredits leaveCredits = leaveCreditsService.newUserCredits(
@@ -55,7 +51,7 @@ public class UserService {
                 leaveCredits
         );
 
-        return userRepository.save(user); // cascade saves credits
+        return userRepository.save(user);
     }
 
 
@@ -77,16 +73,11 @@ public class UserService {
             existingUser.setRole(userRequest.getRole());
         }
 
-        // Update manager
-        if (userRequest.getManagerId() != null) {
-            User manager = userRepository.findById(userRequest.getManagerId())
-                    .orElseThrow(() -> new ManagerNotFoundException(userRequest.getManagerId()));
-            existingUser.setManager(manager);
-        } else {
-            existingUser.setManager(null);
-        }
+        // Update manager (reusable method)
+        User manager = validateAndGetManager(userRequest.getManagerId());
+        existingUser.setManager(manager);
 
-        // 🔹 Delegate credits update to service
+        // 🔹 Delegate credits update
         LeaveCredits updatedCredits = leaveCreditsService.updateCredits(
                 existingUser.getLeaveCredits(),
                 userRequest.getTotalCredits(),
@@ -97,8 +88,6 @@ public class UserService {
 
         return userRepository.save(existingUser);
     }
-
-
 
     // ✅ Pagination + filters for users
     public Page<User> fetchUsers(int max, int page, Long manager, Integer totalCredits, Integer remainingCredits) {
@@ -148,5 +137,24 @@ public class UserService {
     }
     public boolean isEmployee(User employee) {
         return employee.getRole().equals(Role.EMPLOYEE);
+    }
+
+    /**
+     * Helper to fetch manager and ensure user has MANAGER role.
+     * Returns null if no managerId provided.
+     */
+    private User validateAndGetManager(Long managerId) {
+        if (managerId == null) {
+            return null;
+        }
+
+        User manager = userRepository.findById(managerId)
+                .orElseThrow(() -> new ManagerNotFoundException(managerId));
+
+        if (!Role.MANAGER.equals(manager.getRole())) {
+            throw new InvalidManagerAssignmentException(managerId);
+        }
+
+        return manager;
     }
 }
