@@ -30,10 +30,7 @@ public class LeaveApplicationService {
         User employee = userService.getUserById(userId);
 
         int requestedDays = leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
-
-        // Assign approver only if the applicant is a regular employee
         User approver = determineApprover(employee);
-        // For manager & HR leave applications -> approver remains null (HR will handle)
 
         LeaveApplication leaveApplication = new LeaveApplication(
                 request.getStartDate(),
@@ -43,6 +40,7 @@ public class LeaveApplicationService {
         );
         leaveApplication.setEmployee(employee);
         leaveApplication.setApprover(approver);
+        leaveApplication.setTotalDays(requestedDays);
 
         return leaveApplicationRepository.save(leaveApplication);
     }
@@ -53,7 +51,6 @@ public class LeaveApplicationService {
                 : userService.getHR();
     }
 
-    // Employee's own leaves
     public Page<LeaveApplication> fetchOwnLeaveApplication(Long userId, int page, int max) {
         Pageable pageable = PageRequest.of(page - 1, max);
 
@@ -64,7 +61,6 @@ public class LeaveApplicationService {
         return leaveApplicationRepository.findByEmployee(employee, pageable);
     }
 
-    // Manager: leaves of their team
     public Page<LeaveApplication> fetchTeamLeaveApplication(Long userId, int page, int max) {
         Pageable pageable = PageRequest.of(page - 1, max);
 
@@ -75,7 +71,6 @@ public class LeaveApplicationService {
         return leaveApplicationRepository.findByApprover(manager, pageable);
     }
 
-    // HR: all leaves
     public Page<LeaveApplication> fetchAllLeaveApplication(Long userId, int page, int max) {
         Pageable pageable = PageRequest.of(page - 1, max);
 
@@ -89,19 +84,15 @@ public class LeaveApplicationService {
 
     public LeaveApplication cancelLeave(Long userId, Long leaveApplicationId) {
         LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new LeaveApplicationNotFoundException(leaveApplicationId));
+                .orElseThrow(() -> new ResourceNotFoundException("ID_NOT_FOUND", "Leave Application with id" + leaveApplicationId + "not found"));
 
-        // ✅ Ensure only the employee who applied can cancel
         if (!leaveApplication.getEmployee().getId().equals(userId)) {
             throw new AccessDeniedException("You can only cancel your own leave.");
         }
-
-        // ✅ Prevent canceling already rejected or cancelled applications
         if (leaveApplication.getStatus() == LeaveStatus.REJECTED ||
                 leaveApplication.getStatus() == LeaveStatus.CANCELLED) {
             throw new InvalidLeaveOperationException("Cannot cancel rejected or already cancelled leave.");
         }
-
 
         leaveApplication.setStatus(LeaveStatus.CANCELLED);
         leaveCreditsService.refundCredits(
@@ -122,6 +113,7 @@ public class LeaveApplicationService {
 //                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
 //
 //        application.setStatus(LeaveStatus.REJECTED);
+
 //        return leaveApplicationRepository.save(application);
 //    }
 //
@@ -133,16 +125,35 @@ public class LeaveApplicationService {
 //
 //        LeaveApplication application = leaveApplicationRepository.findById(leaveApplicationId)
 //                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-//
+//          leaveCreditsService.refundCredits(
+//                leaveApplication.getEmployee().getId(),
+//                leaveApplication.getStartDate(),
+//                leaveApplication.getEndDate()
+//        );
 //        application.setStatus(LeaveStatus.APPROVED);
 //        return leaveApplicationRepository.save(application);
 //    }
 
-    // Private helper to handle access check and status update
-    private LeaveApplication updateLeaveStatus(Long managerId, Long leaveApplicationId, LeaveStatus status) {
+
+    public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
+        return processLeave(managerId, leaveApplicationId, LeaveStatus.APPROVED);
+    }
+
+    public LeaveApplication rejectLeave(Long managerId, Long leaveApplicationId) {
+        LeaveApplication leaveApplication = processLeave(managerId, leaveApplicationId, LeaveStatus.REJECTED);
+        leaveCreditsService.refundCredits(
+                leaveApplication.getEmployee().getId(),
+                leaveApplication.getStartDate(),
+                leaveApplication.getEndDate()
+        );
+
+        return leaveApplication;
+    }
+
+    private LeaveApplication processLeave(Long managerId, Long leaveApplicationId, LeaveStatus status) {
         User manager = userService.getUserById(managerId);
         LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
+                .orElseThrow(() -> new ResourceNotFoundException("ID_NOT_FOUND", "Leave Application with id" + leaveApplicationId + "not found"));
 
         User employee = leaveApplication.getEmployee();
         boolean isHr = manager.getRole() == Role.HR;
@@ -155,20 +166,5 @@ public class LeaveApplicationService {
         leaveApplication.setStatus(status);
         return leaveApplicationRepository.save(leaveApplication);
 
-    }
-
-    public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
-        return updateLeaveStatus(managerId, leaveApplicationId, LeaveStatus.APPROVED);
-    }
-
-    public LeaveApplication rejectLeave(Long managerId, Long leaveApplicationId) {
-        LeaveApplication leaveApplication = updateLeaveStatus(managerId, leaveApplicationId, LeaveStatus.REJECTED);
-        leaveCreditsService.refundCredits(
-                leaveApplication.getEmployee().getId(),
-                leaveApplication.getStartDate(),
-                leaveApplication.getEndDate()
-        );
-
-        return leaveApplication;
     }
 }

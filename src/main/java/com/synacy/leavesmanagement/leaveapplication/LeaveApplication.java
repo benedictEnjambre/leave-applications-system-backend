@@ -44,7 +44,9 @@ public class LeaveApplication {
     @JoinColumn(name = "approver_id", nullable = true)
     private User approver;
 
+    private int totalDays;
     private String remarks;
+
 
     public LeaveApplication(LocalDate startDate, LocalDate endDate,
                             LeaveType leaveType, String remarks) {

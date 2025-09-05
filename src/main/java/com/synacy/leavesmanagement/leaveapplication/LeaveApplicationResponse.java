@@ -11,6 +11,7 @@ public class LeaveApplicationResponse {
     private final LocalDate endDate;
     private final LeaveType leaveType;
     private final LeaveStatus status;
+    private final int days;
     private final String remarks;
 
     public LeaveApplicationResponse(LeaveApplication leaveApplication) {
@@ -19,6 +20,7 @@ public class LeaveApplicationResponse {
         this.endDate = leaveApplication.getEndDate();
         this.leaveType = leaveApplication.getLeaveType();
         this.status = leaveApplication.getStatus();
+        this.days = leaveApplication.getTotalDays();
         this.remarks = leaveApplication.getRemarks();
     }
 }
