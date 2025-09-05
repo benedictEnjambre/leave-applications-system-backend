@@ -21,7 +21,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/api/v1/users")
+    @GetMapping("/api/v1/user")
     public PageResponse<UserResponse> fetchUsers(
             @RequestParam(value = "max", defaultValue = "3") int max,
             @RequestParam(value = "page", defaultValue = "1") int page, // 1-based
