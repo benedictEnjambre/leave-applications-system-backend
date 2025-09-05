@@ -9,13 +9,15 @@ public class UserResponse {
     private final String managerName;
     private final Role role;
     private final long id;
-    //  private final LeaveCredits leaveCredits;
+    private final Integer totalCredits;     // 🔹 now nullable
+    private final Integer remainingCredits; // 🔹 now nullable
 
     UserResponse(User user) {
         this.id = user.getId();
         this.name = user.getName();
         this.role = user.getRole();
         this.managerName = user.getManager() != null ? user.getManager().getName() : null;
-       // this.leaveCredits = user.getLeaveCredits() != null ? new LeaveCreditsResponse(user.getLeaveCredits()) : null;
+        this.totalCredits = user.getLeaveCredits().getTotalCredits();
+        this.remainingCredits = user.getLeaveCredits().getRemainingCredits();
     }
 }
