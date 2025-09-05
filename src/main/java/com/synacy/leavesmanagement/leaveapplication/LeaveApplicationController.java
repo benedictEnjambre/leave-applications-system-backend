@@ -26,34 +26,27 @@ public class LeaveApplicationController {
         return new LeaveApplicationResponse(leaveApplication);
     }
 
-
-    //
-//    @PutMapping("api/v1/leave-applications/{leaveAppId}")
-//    public LeaveApplicationResponse updateLeaveApplication(@PathVariable Long leaveAppId,
-//                                                   @RequestParam Long approverId,
-//                                                   @RequestParam LeaveStatus status,
-//                                                   @RequestParam(required = false) String remarks) {
-//        return leaveApplicationService.updateLeaveStatus(approverId, leaveAppId, status, remarks);
-//    }
-//
-    @GetMapping("api/v1/leave-application/{userId}/me")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/api/v1/leave-application/{userId}/me")
     public PageResponse<LeaveApplicationResponse> fetchMyLeaves(@PathVariable Long userId,
                                                                 @RequestParam(value = "page", defaultValue = "1") int page,
                                                                 @RequestParam(value = "max", defaultValue = "5") int max) {
         return buildPageResponse(leaveApplicationService.fetchOwnLeaveApplication(userId, page, max), page);
     }
 
-    @GetMapping("api/v1/leave-application/{userId}/team")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/api/v1/leave-application/{userId}/team")
     public PageResponse<LeaveApplicationResponse> fetchTeamLeave(@PathVariable Long userId,
-                                                                @RequestParam(value = "page", defaultValue = "1") int page,
-                                                                @RequestParam(value = "max", defaultValue = "5") int max) {
+                                                                 @RequestParam(value = "page", defaultValue = "1") int page,
+                                                                 @RequestParam(value = "max", defaultValue = "5") int max) {
         return buildPageResponse(leaveApplicationService.fetchTeamLeaveApplication(userId, page, max), page);
     }
 
-    @GetMapping("api/v1/leave-application/{userId}/all")
+    @ResponseStatus(HttpStatus.OK)
+    @GetMapping("/api/v1/leave-application/{userId}/all")
     public PageResponse<LeaveApplicationResponse> fetchAllLeave(@PathVariable Long userId,
-                                                                 @RequestParam(value = "page", defaultValue = "1") int page,
-                                                                 @RequestParam(value = "max", defaultValue = "5") int max) {
+                                                                @RequestParam(value = "page", defaultValue = "1") int page,
+                                                                @RequestParam(value = "max", defaultValue = "5") int max) {
         return buildPageResponse(leaveApplicationService.fetchAllLeaveApplication(userId, page, max), page);
     }
 
@@ -66,7 +59,27 @@ public class LeaveApplicationController {
         return new PageResponse<>((int) applications.getTotalElements(), page, content);
     }
 
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping("api/v1/leave-application/{userId}/{leaveId}/cancel")
+    public LeaveApplicationResponse cancelLeave(@PathVariable Long userId,
+                                                @PathVariable Long leaveId) {
+        LeaveApplication application = leaveApplicationService.cancelLeave(userId, leaveId);
+        return new LeaveApplicationResponse(application);
+    }
 
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping("api/v1/leave-application/{userId}/{leaveId}/approve")
+    public LeaveApplicationResponse approveLeave(@PathVariable Long userId,
+                                                 @PathVariable Long leaveId) {
+        LeaveApplication application = leaveApplicationService.approveLeave(userId, leaveId);
+        return new LeaveApplicationResponse(application);
+    }
 
-
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PatchMapping("api/v1/leave-application/{userId}/{leaveId}/reject")
+    public LeaveApplicationResponse rejectLeave(@PathVariable Long userId,
+                                                @PathVariable Long leaveId) {
+        LeaveApplication application = leaveApplicationService.rejectLeave(userId, leaveId);
+        return new LeaveApplicationResponse(application);
+    }
 }
