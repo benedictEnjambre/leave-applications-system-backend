@@ -13,8 +13,10 @@ public class LeaveApplicationResponse {
     private final LeaveStatus status;
     private final int days;
     private final String remarks;
+    private final String employeeName;
 
     public LeaveApplicationResponse(LeaveApplication leaveApplication) {
+        this.employeeName = leaveApplication.getEmployee().getName();
         this.id = leaveApplication.getId();
         this.startDate = leaveApplication.getStartDate();
         this.endDate = leaveApplication.getEndDate();
