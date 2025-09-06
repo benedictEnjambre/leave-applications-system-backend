@@ -49,6 +49,13 @@ public class UserController {
                 userResponseList
         );
     }
+
+    @GetMapping("/api/v1/user/{id}")
+    public UserResponse fetchUser(@PathVariable Long id){
+        User user = userService.getUserById(id);
+        return new UserResponse(user);
+    }
+
     @PostMapping("/api/v1/user")
     public UserResponse createUser(@RequestBody UserRequest userRequest){
         User user =  userService.createUser(userRequest);
