@@ -1,7 +1,6 @@
 package com.synacy.leavesmanagement.user;
 
 import com.synacy.leavesmanagement.leavecredits.LeaveCredits;
-import com.synacy.leavesmanagement.leavecredits.LeaveCreditsRepository;
 import com.synacy.leavesmanagement.leavecredits.LeaveCreditsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -35,7 +34,7 @@ public class UserService {
         }
 
         // 3. Validate manager (if any)
-        User manager = validateAndGetManager(userRequest.getManagerId());
+        User manager = validateAndGetManager(userRequest.getManagerId(), userRequest.getRole());
 
         // 4. Delegate leave credits setup
         LeaveCredits leaveCredits = leaveCreditsService.newUserCredits(
@@ -73,8 +72,9 @@ public class UserService {
             existingUser.setRole(userRequest.getRole());
         }
 
-        // Update manager (reusable method)
-        User manager = validateAndGetManager(userRequest.getManagerId());
+        Role effectiveRole = userRequest.getRole() != null ? userRequest.getRole() : existingUser.getRole();
+
+        User manager = validateAndGetManager(userRequest.getManagerId(), effectiveRole);
         existingUser.setManager(manager);
 
         // 🔹 Delegate credits update
@@ -143,7 +143,12 @@ public class UserService {
      * Helper to fetch manager and ensure user has MANAGER role.
      * Returns null if no managerId provided.
      */
-    private User validateAndGetManager(Long managerId) {
+    private User validateAndGetManager(Long managerId, Role role) {
+        // 🚨 HRs must not have managers
+        if (Role.HR.equals(role) && managerId != null) {
+            throw new InvalidManagerAssignmentException("HRs cannot have managers");
+        }
+
         if (managerId == null) {
             return null;
         }
@@ -152,9 +157,12 @@ public class UserService {
                 .orElseThrow(() -> new ManagerNotFoundException(managerId));
 
         if (!Role.MANAGER.equals(manager.getRole())) {
-            throw new InvalidManagerAssignmentException(managerId);
+            throw new InvalidManagerAssignmentException(
+                    "User with id " + managerId + " cannot be assigned as manager because they are not a MANAGER"
+            );
         }
 
         return manager;
     }
+
 }

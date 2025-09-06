@@ -1,32 +1,52 @@
 package com.synacy.leavesmanagement.user
 
 import com.synacy.leavesmanagement.leavecredits.LeaveCredits
+import com.synacy.leavesmanagement.leavecredits.LeaveCreditsService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import spock.lang.Specification
 
 class UserServiceSpec extends Specification {
 
     def userRepository = Mock(UserRepository)
-    def userService = new UserService(userRepository)
+    def leaveCreditsService = Mock(LeaveCreditsService)
+    def userService = new UserService(userRepository, leaveCreditsService)
 
-    def "CreateUser"() {
+    def "CreateUser - success"() {
         given:
-        def request = new UserRequest("Alice", Role.HR, null, new LeaveCredits(10, 10))
+        def request = new UserRequest("Alice", Role.HR, null, 10, 10)
+
+        def credits = new LeaveCredits(totalCredits: 10, remainingCredits: 10)
+        leaveCreditsService.newUserCredits(10, 10) >> credits
+        userRepository.existsByName("Alice") >> false
+        userRepository.save(_ as User) >> { User u -> u }
 
         when:
         def result = userService.createUser(request)
 
         then:
-        1 * userRepository.existsByName("Alice") >> false
-        1 * userRepository.save(_ as User) >> { User u -> u }
         result.name == "Alice"
+        result.role == Role.HR
+        result.leaveCredits.totalCredits == 10
     }
 
-    def "FetchUsers"() {
+    def "CreateUser - duplicate name throws exception"() {
+        given:
+        def request = new UserRequest("Alice", Role.HR, null, 10, 10)
+        userRepository.existsByName("Alice") >> true
+
+        when:
+        userService.createUser(request)
+
+        then:
+        thrown(DuplicateUserNameException)
+    }
+
+    def "FetchUsers - no filters"() {
         given:
         def pageable = PageRequest.of(0, 5)
-        def users = [new User("Bob", Role.HR, null, new LeaveCredits(5, 5))]
+        def users = [new User("Bob", Role.HR, null, new LeaveCredits(totalCredits: 5, remainingCredits: 5))]
         userRepository.findAll(pageable) >> new PageImpl<>(users)
 
         when:
@@ -37,9 +57,9 @@ class UserServiceSpec extends Specification {
         result.content[0].name == "Bob"
     }
 
-    def "GetUserById"() {
+    def "GetUserById - found"() {
         given:
-        def user = new User("Charlie", Role.HR, null, new LeaveCredits(7, 7))
+        def user = new User("Charlie", Role.HR, null, new LeaveCredits(totalCredits: 7, remainingCredits: 7))
         userRepository.findById(1L) >> Optional.of(user)
 
         when:
@@ -49,11 +69,24 @@ class UserServiceSpec extends Specification {
         result.name == "Charlie"
     }
 
-    def "GetManager"() {
+    def "GetUserById - not found throws exception"() {
         given:
-        def manager = new User("Manager", Role.HR, null, new LeaveCredits(10, 10))
-        def employee = new User("Emp", Role.EMPLOYEE, manager, new LeaveCredits(5, 5))
-        userRepository.findById(manager.id) >> Optional.of(manager)
+        userRepository.findById(99L) >> Optional.empty()
+
+        when:
+        userService.getUserById(99L)
+
+        then:
+        thrown(UserNotFoundException)
+    }
+
+    def "GetManager - success"() {
+        given:
+        def manager = new User("Manager", Role.MANAGER, null, new LeaveCredits(totalCredits: 10, remainingCredits: 10))
+        manager.id = 1L
+        def employee = new User("Emp", Role.EMPLOYEE, manager, new LeaveCredits(totalCredits: 5, remainingCredits: 5))
+
+        userRepository.findById(1L) >> Optional.of(manager)
 
         when:
         def result = userService.getManager(employee)
@@ -62,9 +95,20 @@ class UserServiceSpec extends Specification {
         result.name == "Manager"
     }
 
-    def "GetHR"() {
+    def "GetManager - employee has no manager"() {
         given:
-        def hr = new User("HR Guy", Role.HR, null, new LeaveCredits(12, 12))
+        def employee = new User("Emp", Role.EMPLOYEE, null, new LeaveCredits(totalCredits: 5, remainingCredits: 5))
+
+        when:
+        userService.getManager(employee)
+
+        then:
+        thrown(ManagerNotFoundException)
+    }
+
+    def "GetHR - success"() {
+        given:
+        def hr = new User("HR Guy", Role.HR, null, new LeaveCredits(totalCredits: 12, remainingCredits: 12))
         userRepository.findByRole(Role.HR) >> Optional.of(hr)
 
         when:
@@ -73,5 +117,15 @@ class UserServiceSpec extends Specification {
         then:
         result.role == Role.HR
     }
-}
 
+    def "GetHR - not found throws exception"() {
+        given:
+        userRepository.findByRole(Role.HR) >> Optional.empty()
+
+        when:
+        userService.getHR()
+
+        then:
+        thrown(RoleNotFoundException)
+    }
+}

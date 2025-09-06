@@ -21,7 +21,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/api/v1/users")
+    @GetMapping("/api/v1/user")
     public PageResponse<UserResponse> fetchUsers(
             @RequestParam(value = "max", defaultValue = "3") int max,
             @RequestParam(value = "page", defaultValue = "1") int page, // 1-based
@@ -49,6 +49,13 @@ public class UserController {
                 userResponseList
         );
     }
+
+    @GetMapping("/api/v1/user/{id}")
+    public UserResponse fetchUser(@PathVariable Long id){
+        User user = userService.getUserById(id);
+        return new UserResponse(user);
+    }
+
     @PostMapping("/api/v1/user")
     public UserResponse createUser(@RequestBody UserRequest userRequest){
         User user =  userService.createUser(userRequest);
