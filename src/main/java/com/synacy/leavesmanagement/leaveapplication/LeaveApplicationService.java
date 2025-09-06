@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import com.synacy.leavesmanagement.user.Role;
 
@@ -29,7 +30,12 @@ public class LeaveApplicationService {
     public LeaveApplication applyLeave(Long userId, LeaveApplicationRequest request) {
         User employee = userService.getUserById(userId);
 
-        int requestedDays = leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
+        int requestedDays = leaveCreditsService.calculateRequestedDays(
+                request.getStartDate(),
+                request.getEndDate()
+        );
+
+        leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
         User approver = determineApprover(employee);
 
         LeaveApplication leaveApplication = new LeaveApplication(
@@ -62,7 +68,7 @@ public class LeaveApplicationService {
     }
 
     public Page<LeaveApplication> fetchTeamLeaveApplication(Long userId, int page, int max) {
-        Pageable pageable = PageRequest.of(page - 1, max);
+        Pageable pageable = PageRequest.of(page - 1, max, Sort.by("startDate").descending());
 
         User manager = userService.getUserById(userId);
         if (manager.getRole() != Role.MANAGER) {
@@ -72,7 +78,7 @@ public class LeaveApplicationService {
     }
 
     public Page<LeaveApplication> fetchAllLeaveApplication(Long userId, int page, int max) {
-        Pageable pageable = PageRequest.of(page - 1, max);
+        Pageable pageable = PageRequest.of(page - 1, max, Sort.by(Sort.Direction.DESC, "startDate"));
 
         User hr = userService.getUserById(userId);
         if (hr.getRole() != Role.HR) {
@@ -165,6 +171,5 @@ public class LeaveApplicationService {
 
         leaveApplication.setStatus(status);
         return leaveApplicationRepository.save(leaveApplication);
-
     }
 }
