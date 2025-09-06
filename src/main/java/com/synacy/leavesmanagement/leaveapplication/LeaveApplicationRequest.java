@@ -11,6 +11,5 @@ import java.time.LocalDate;
 public class LeaveApplicationRequest {
     private LocalDate startDate;
     private LocalDate endDate;
-    private LeaveType leaveType;
     private String remarks;
 }
