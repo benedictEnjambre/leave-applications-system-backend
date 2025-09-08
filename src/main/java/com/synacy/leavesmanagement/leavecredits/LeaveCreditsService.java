@@ -45,7 +45,6 @@ public class LeaveCreditsService {
         return credits.getRemainingCredits();
     }
 
-    // Restore credits if leave is canceled/rejected
     public int refundCredits(Long userId, LocalDate startDate, LocalDate endDate) {
         LeaveCredits credits = getCreditsOrThrow(userId);
         int days = calculateRequestedDays(startDate, endDate);
