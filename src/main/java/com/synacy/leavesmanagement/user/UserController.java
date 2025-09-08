@@ -22,10 +22,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    @ResponseStatus(HttpStatus.FOUND)
+    //@ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/api/v1/user")
     public PageResponse<UserResponse> fetchUsers(
-            @RequestParam(value = "max", defaultValue = "5") int max,
+            @RequestParam(value = "max", defaultValue = "1") int max,
             @RequestParam(value = "page", defaultValue = "1") int page, // 1-based
             @RequestParam(value = "manager", required = false) Long manager,
             @RequestParam(value = "totalCredits", required = false) Integer totalCredits,
@@ -46,21 +46,21 @@ public class UserController {
         );
     }
 
-    @ResponseStatus(HttpStatus.FOUND)
+    //@ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/api/v1/user/{id}")
     public UserResponse fetchUser(@PathVariable Long id){
         User user = userService.getUserById(id);
         return new UserResponse(user);
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
+    //@ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/v1/user")
     public UserResponse createUser(@RequestBody UserRequest userRequest){
         User user =  userService.createUser(userRequest);
         return new UserResponse(user);
     }
 
-    @ResponseStatus(HttpStatus.ACCEPTED)
+   // @ResponseStatus(HttpStatus.ACCEPTED)
     @PutMapping("/api/v1/user/{id}")
     public UserResponse updateUser(
             @PathVariable Long id,
