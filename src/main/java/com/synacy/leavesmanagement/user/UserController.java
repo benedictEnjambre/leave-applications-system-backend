@@ -4,6 +4,7 @@ import com.synacy.leavesmanagement.web.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,20 +22,15 @@ public class UserController {
         this.userService = userService;
     }
 
+    @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/api/v1/user")
     public PageResponse<UserResponse> fetchUsers(
-            @RequestParam(value = "max", defaultValue = "3") int max,
+            @RequestParam(value = "max", defaultValue = "5") int max,
             @RequestParam(value = "page", defaultValue = "1") int page, // 1-based
             @RequestParam(value = "manager", required = false) Long manager,
             @RequestParam(value = "totalCredits", required = false) Integer totalCredits,
             @RequestParam(value = "remainingCredits", required = false) Integer remainingCredits
     ) {
-/*        if (max < 1) {
-            throw new ValidationException("INVALID_MAX_VALUE", "Max value must be greater than 0");
-        }
-        if (page < 1) {
-            throw new ValidationException("INVALID_PAGE_VALUE", "Page value must be greater than 0");
-        }*/
 
         Page<User> users = userService.fetchUsers(max, page - 1, manager, totalCredits, remainingCredits);
 
@@ -50,27 +46,27 @@ public class UserController {
         );
     }
 
+    @ResponseStatus(HttpStatus.FOUND)
     @GetMapping("/api/v1/user/{id}")
     public UserResponse fetchUser(@PathVariable Long id){
         User user = userService.getUserById(id);
         return new UserResponse(user);
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/api/v1/user")
     public UserResponse createUser(@RequestBody UserRequest userRequest){
         User user =  userService.createUser(userRequest);
         return new UserResponse(user);
     }
 
+    @ResponseStatus(HttpStatus.ACCEPTED)
     @PutMapping("/api/v1/user/{id}")
     public UserResponse updateUser(
             @PathVariable Long id,
-            @RequestBody UserRequest userRequest
+            @RequestBody UserEditRequest userEditRequest
     ) {
-        User user = userService.updateUser(id, userRequest);
+        User user = userService.updateUser(id,userEditRequest);
         return new UserResponse(user);
     }
-
-
-
 }

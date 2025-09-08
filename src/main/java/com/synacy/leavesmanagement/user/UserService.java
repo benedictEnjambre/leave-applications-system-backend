@@ -2,6 +2,7 @@ package com.synacy.leavesmanagement.user;
 
 import com.synacy.leavesmanagement.leavecredits.LeaveCredits;
 import com.synacy.leavesmanagement.leavecredits.LeaveCreditsService;
+import com.synacy.leavesmanagement.web.apierror.InvalidOperationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,9 +25,9 @@ public class UserService {
         if (userRequest.getName() == null || userRequest.getName().isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
-        if (userRepository.existsByName(userRequest.getName())) {
+/*        if (userRepository.existsByName(userRequest.getName())) {
             throw new DuplicateUserNameException(userRequest.getName());
-        }
+        } */ //same name busines rule? pwede ba same name employees or nah?
 
         // 2. Validate role
         if (userRequest.getRole() == null) {
@@ -54,34 +55,42 @@ public class UserService {
     }
 
 
-    public User updateUser(Long id, UserRequest userRequest) {
+    public User updateUser(Long id, UserEditRequest userEditRequest) {
+
+        boolean validationResult = isHr(userEditRequest.getEditorId());
+        if (!validationResult) {
+            throw new InvalidOperationException("403","ONLY HR ADMIN CAN EDIT!!!");
+        }
+
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        // Update name
-        if (userRequest.getName() != null && !userRequest.getName().isBlank()) {
-            if (!existingUser.getName().equals(userRequest.getName())
-                    && userRepository.existsByName(userRequest.getName())) {
-                throw new DuplicateUserNameException(userRequest.getName());
+        // Update name these are validation for same name business rule?
+/*        if (userEditRequest.getName() != null && !userEditRequest.getName().isBlank()) {
+            if (!existingUser.getName().equals(userEditRequest.getName())
+                    && userRepository.existsByName(userEditRequest.getName())) {
+                throw new DuplicateUserNameException(userEditRequest.getName());
             }
-            existingUser.setName(userRequest.getName());
-        }
+            existingUser.setName(userEditRequest.getName());
+        }*/
+
+        existingUser.setName(userEditRequest.getName());
 
         // Update role
-        if (userRequest.getRole() != null) {
-            existingUser.setRole(userRequest.getRole());
+        if (userEditRequest.getRole() != null) {
+            existingUser.setRole(userEditRequest.getRole());
         }
 
-        Role effectiveRole = userRequest.getRole() != null ? userRequest.getRole() : existingUser.getRole();
+        Role effectiveRole = userEditRequest.getRole() != null ? userEditRequest.getRole() : existingUser.getRole();
 
-        User manager = validateAndGetManager(userRequest.getManagerId(), effectiveRole);
+        User manager = validateAndGetManager(userEditRequest.getManagerId(), effectiveRole);
         existingUser.setManager(manager);
 
         // 🔹 Delegate credits update
         LeaveCredits updatedCredits = leaveCreditsService.updateCredits(
                 existingUser.getLeaveCredits(),
-                userRequest.getTotalCredits(),
-                userRequest.getRemainingCredits()
+                userEditRequest.getTotalCredits(),
+                userEditRequest.getRemainingCredits()
         );
 
         existingUser.setLeaveCredits(updatedCredits);
@@ -129,16 +138,6 @@ public class UserService {
                 .orElseThrow(() -> new RoleNotFoundException("HR"));
     }
 
-    public boolean isHr(User employee) {
-        return employee.getRole().equals(Role.HR);
-    }
-    public boolean isManager(User employee) {
-        return employee.getRole().equals(Role.MANAGER);
-    }
-    public boolean isEmployee(User employee) {
-        return employee.getRole().equals(Role.EMPLOYEE);
-    }
-
     /**
      * Helper to fetch manager and ensure user has MANAGER role.
      * Returns null if no managerId provided.
@@ -164,5 +163,14 @@ public class UserService {
 
         return manager;
     }
+    /*
+    * HR validation
+    * */
 
+    private boolean isHr(Long idForValidation){
+        //validate role HR only
+        User userForValidation  = userRepository.findById(idForValidation).orElseThrow(() -> new UserNotFoundException(idForValidation));
+
+        return userForValidation.getRole().equals(Role.HR);
+    }
 }
