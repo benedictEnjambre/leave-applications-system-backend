@@ -109,38 +109,6 @@ public class LeaveApplicationService {
         return leaveApplicationRepository.save(leaveApplication);
     }
 
-//    public LeaveApplication rejectLeave(Long managerId, Long leaveApplicationId) {
-//        User manager = userService.getUserById(managerId);
-//        if (manager.getRole() != Role.MANAGER && manager.getRole() != Role.HR) {
-//            throw new AccessDeniedException("Only Managers or HR can reject leave applications.");
-//        }
-//
-//        LeaveApplication application = leaveApplicationRepository.findById(leaveApplicationId)
-//                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-//
-//        application.setStatus(LeaveStatus.REJECTED);
-
-//        return leaveApplicationRepository.save(application);
-//    }
-//
-//    public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
-//        User manager = userService.getUserById(managerId);
-//        if (manager.getRole() != Role.MANAGER && manager.getRole() != Role.HR) {
-//            throw new AccessDeniedException("Only Managers or HR can approve leave applications.");
-//        }
-//
-//        LeaveApplication application = leaveApplicationRepository.findById(leaveApplicationId)
-//                .orElseThrow(() -> new ResourceNotFoundException(leaveApplicationId, "LeaveApplication"));
-//          leaveCreditsService.refundCredits(
-//                leaveApplication.getEmployee().getId(),
-//                leaveApplication.getStartDate(),
-//                leaveApplication.getEndDate()
-//        );
-//        application.setStatus(LeaveStatus.APPROVED);
-//        return leaveApplicationRepository.save(application);
-//    }
-
-
     public LeaveApplication approveLeave(Long managerId, Long leaveApplicationId) {
         return processLeave(managerId, leaveApplicationId, LeaveStatus.APPROVED);
     }
