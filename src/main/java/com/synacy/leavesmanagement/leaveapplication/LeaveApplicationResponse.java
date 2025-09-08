@@ -7,22 +7,23 @@ import java.time.LocalDate;
 public class LeaveApplicationResponse {
 
     private final Long id;
+    private final String employeeName;
     private final LocalDate startDate;
     private final LocalDate endDate;
-    private final LeaveType leaveType;
     private final LeaveStatus status;
     private final int days;
     private final String remarks;
-    private final String employeeName;
+    private final int availableCredits;
+
 
     public LeaveApplicationResponse(LeaveApplication leaveApplication) {
-        this.employeeName = leaveApplication.getEmployee().getName();
         this.id = leaveApplication.getId();
+        this.employeeName = leaveApplication.getEmployee().getName();
         this.startDate = leaveApplication.getStartDate();
         this.endDate = leaveApplication.getEndDate();
-        this.leaveType = leaveApplication.getLeaveType();
         this.status = leaveApplication.getStatus();
         this.days = leaveApplication.getTotalDays();
         this.remarks = leaveApplication.getRemarks();
+        this.availableCredits = leaveApplication.getAvailableCredits();
     }
 }

@@ -14,7 +14,6 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
     Page<LeaveApplication> findByEmployee(User employee, Pageable pageable);
     Page<LeaveApplication> findByApprover(User approver, Pageable pageable);
 
-    Page<LeaveApplication> findByEmployeeOrApprover(User employee, User approver, Pageable pageable);
 
 
 }

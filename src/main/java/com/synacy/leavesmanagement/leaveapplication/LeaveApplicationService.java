@@ -35,17 +35,17 @@ public class LeaveApplicationService {
                 request.getEndDate()
         );
 
-        leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
+        int totalDays = leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
         User approver = determineApprover(employee);
 
         LeaveApplication leaveApplication = new LeaveApplication(
                 request.getStartDate(),
                 request.getEndDate(),
-                request.getLeaveType(),
                 request.getRemarks()
         );
         leaveApplication.setEmployee(employee);
         leaveApplication.setApprover(approver);
+        leaveApplication.setAvailableCredits(totalDays);
         leaveApplication.setTotalDays(requestedDays);
 
         return leaveApplicationRepository.save(leaveApplication);
