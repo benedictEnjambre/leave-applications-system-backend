@@ -99,6 +99,21 @@ class LeaveApplicationServiceSpec extends Specification {
         })
     }
 
+    def "applyLeave should throw an exception if start Date is after the end Date"(){
+        given:
+        def request = new LeaveApplicationRequest(
+                LocalDate.of(2025, 9, 10),
+                LocalDate.of(2025, 9, 5),
+                "Going on vacation"
+        )
+        userService.getUserById(employee.getId()) >> employee
+
+        when:
+        leaveApplicationService.applyLeave(employee.getId(), request)
+
+        then:
+        thrown(InvalidLeaveOperationException)
+    }
 
     def "applyLeave should throw an exception if user doesn't exist"(){
         given:
