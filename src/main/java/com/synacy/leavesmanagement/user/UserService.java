@@ -34,7 +34,7 @@ public class UserService {
         }
 
         // 3. Validate manager (if any)
-        User manager = validateAndGetManager(userRequest.getManagerId(), userRequest.getRole());
+        User manager = validateAndGetManager(userRequest.getManagerId(), userRequest.getRole(), null);
 
         // 4. Delegate leave credits setup
         LeaveCredits leaveCredits = leaveCreditsService.newUserCredits(
@@ -87,8 +87,9 @@ public class UserService {
         }
 
         // Update manager
-        User manager = validateAndGetManager(userEditRequest.getManagerId(), effectiveRole);
+        User manager = validateAndGetManager(userEditRequest.getManagerId(), effectiveRole, id);
         existingUser.setManager(manager);
+
 
         // Update leave credits
         LeaveCredits updatedCredits = leaveCreditsService.updateCredits(
@@ -146,7 +147,7 @@ public class UserService {
      * Helper to fetch manager and ensure user has MANAGER role.
      * Returns null if no managerId provided.
      */
-    private User validateAndGetManager(Long managerId, Role role) {
+    private User validateAndGetManager(Long managerId, Role role, Long selfId) {
         // 🚨 HRs must not have managers
         if (Role.HR.equals(role) && managerId != null) {
             throw new InvalidManagerAssignmentException("HRs cannot have managers");
@@ -154,6 +155,11 @@ public class UserService {
 
         if (managerId == null) {
             return null;
+        }
+
+        // 🚨 Prevent self-assignment
+        if (selfId != null && managerId.equals(selfId)) {
+            throw new InvalidManagerAssignmentException("A user cannot be their own manager");
         }
 
         User manager = userRepository.findById(managerId)
@@ -167,6 +173,7 @@ public class UserService {
 
         return manager;
     }
+
     /*
     * HR validation
     * */
