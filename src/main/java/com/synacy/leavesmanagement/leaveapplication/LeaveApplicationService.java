@@ -30,6 +30,10 @@ public class LeaveApplicationService {
     public LeaveApplication applyLeave(Long userId, LeaveApplicationRequest request) {
         User employee = userService.getUserById(userId);
 
+        if (request.getStartDate().isAfter(request.getEndDate())) {
+            throw new InvalidLeaveOperationException("Start date cannot be after end date.");
+        }
+
         int requestedDays = leaveCreditsService.calculateRequestedDays(
                 request.getStartDate(),
                 request.getEndDate()
