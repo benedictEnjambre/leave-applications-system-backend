@@ -9,6 +9,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -162,4 +164,9 @@ public class UserService {
 
         return userForValidation.getRole().equals(Role.HR);
     }
+
+    public Optional<User> getPrimaryHR() {
+        return userRepository.findFirstByRoleOrderByIdAsc(Role.HR);
+    }
+
 }

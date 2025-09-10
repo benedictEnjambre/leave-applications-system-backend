@@ -12,7 +12,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByRole(Role role);
 
-
+    Optional<User> findFirstByRoleOrderByIdAsc(Role role);
     // Manager filter
     Page<User> findByManager_Id(Long managerId, Pageable pageable);
 

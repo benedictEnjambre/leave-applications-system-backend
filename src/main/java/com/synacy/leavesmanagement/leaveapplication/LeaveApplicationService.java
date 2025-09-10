@@ -56,9 +56,14 @@ public class LeaveApplicationService {
     }
 
     private User determineApprover(User employee) {
-        return (employee.getManager() != null)
-                ? employee.getManager()
-                : userService.getHR();
+        if (employee.getManager() != null) {
+            return employee.getManager();
+        }
+
+        return userService.getPrimaryHR()
+                .orElseThrow(() -> new InvalidLeaveOperationException(
+                        "No manager or HR available to act as approver."
+                ));
     }
 
     public Page<LeaveApplication> fetchOwnLeaveApplication(Long userId, int page, int max) {
