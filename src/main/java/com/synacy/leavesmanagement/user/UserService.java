@@ -25,9 +25,6 @@ public class UserService {
         if (userRequest.getName() == null || userRequest.getName().isBlank()) {
             throw new IllegalArgumentException("Name cannot be empty");
         }
-/*        if (userRepository.existsByName(userRequest.getName())) {
-            throw new DuplicateUserNameException(userRequest.getName());
-        } */ //same name busines rule? pwede ba same name employees or nah?
 
         // 2. Validate role
         if (userRequest.getRole() == null) {
@@ -65,14 +62,6 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        // Update name these are validation for same name business rule?
-/*        if (userEditRequest.getName() != null && !userEditRequest.getName().isBlank()) {
-            if (!existingUser.getName().equals(userEditRequest.getName())
-                    && userRepository.existsByName(userEditRequest.getName())) {
-                throw new DuplicateUserNameException(userEditRequest.getName());
-            }
-            existingUser.setName(userEditRequest.getName());
-        }*/
 
         existingUser.setName(userEditRequest.getName());
 
