@@ -55,7 +55,6 @@ public class UserService {
 
 
     public User updateUser(Long id, UserEditRequest userEditRequest) {
-
         boolean validationResult = isHr(userEditRequest.getEditorId());
         if (!validationResult) {
             throw new InvalidOperationException("403","ONLY HR ADMIN CAN EDIT!!!");
@@ -64,30 +63,44 @@ public class UserService {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-
         existingUser.setName(userEditRequest.getName());
 
-        // Update role
+        Role oldRole = existingUser.getRole();
+
+        // Update role if provided
         if (userEditRequest.getRole() != null) {
             existingUser.setRole(userEditRequest.getRole());
         }
 
-        Role effectiveRole = userEditRequest.getRole() != null ? userEditRequest.getRole() : existingUser.getRole();
+        Role effectiveRole = userEditRequest.getRole() != null
+                ? userEditRequest.getRole()
+                : existingUser.getRole();
 
+        // If user was MANAGER and is no longer a MANAGER → detach employees
+        if (Role.MANAGER.equals(oldRole) && !Role.MANAGER.equals(effectiveRole)) {
+            // fetch all employees under this manager
+            var subordinates = userRepository.findByManager_Id(existingUser.getId());
+            for (User subordinate : subordinates) {
+                subordinate.setManager(null);
+            }
+            userRepository.saveAll(subordinates);
+        }
+
+        // Update manager
         User manager = validateAndGetManager(userEditRequest.getManagerId(), effectiveRole);
         existingUser.setManager(manager);
 
-        // 🔹 Delegate credits update
+        // Update leave credits
         LeaveCredits updatedCredits = leaveCreditsService.updateCredits(
                 existingUser.getLeaveCredits(),
                 userEditRequest.getTotalCredits(),
                 userEditRequest.getRemainingCredits()
         );
-
         existingUser.setLeaveCredits(updatedCredits);
 
         return userRepository.save(existingUser);
     }
+
 
     // ✅ Pagination + filters for users
     public Page<User> fetchUsers(int max, int page, Long manager, Integer totalCredits, Integer remainingCredits) {
