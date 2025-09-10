@@ -126,7 +126,7 @@ public class UserService {
     // 🔹 Get an HR user (assuming role is stored in a Role enum or String)
     public User getHR() {
         return userRepository.findByRole(Role.HR)
-                .orElseThrow(() -> new RoleNotFoundException("HR"));
+                .orElseThrow(() -> new RoleNotFoundException("This person is not a hr"));
     }
 
     /**
@@ -144,7 +144,7 @@ public class UserService {
         }
 
         User manager = userRepository.findById(managerId)
-                .orElseThrow(() -> new ManagerNotFoundException(managerId));
+                .orElseThrow(() -> new ManagerNotFoundException("Manager with id " + managerId + " does not exist."));
 
         if (!Role.MANAGER.equals(manager.getRole())) {
             throw new InvalidManagerAssignmentException(

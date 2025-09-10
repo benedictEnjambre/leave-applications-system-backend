@@ -139,7 +139,7 @@ class LeaveApplicationServiceSpec extends Specification {
         userService.getUserById(employee.getId()) >> employee
         leaveCreditsService.calculateRequestedDays(request.startDate, request.endDate) >> 5
         leaveCreditsService.deductCredits(employee.getId(), request.startDate, request.endDate) >> {
-            throw new InsufficientCreditsException(employee.getId(), 5, 2)
+            throw new InsufficientCreditsException("User " + userId + "requested  " + daysRequested + " days but only has " + remainingDays + "credits left.")
         }
 
         when:
