@@ -23,7 +23,7 @@ The Leave Applications System is a web application that allows employees to file
 - Authentication and login are out of scope. Instead, a dropdown allows switching between HR, Manager, and Employee views.
 
 ## Tech Stack
- - Backend
+#### Backend
  - Spring Boot
 #### Database
 - PostgreSQL
@@ -37,9 +37,9 @@ The Leave Applications System is a web application that allows employees to file
 - Spring Boot (Web, Data JPA, H2 Database)
 
 ## Prerequisites
-- JDK 17+
-- Node.js 18+ 
-- PostgreSQL 14+
+- **JDK:** 17+ (tested with 17.x)
+- **Node.js:** 18+ (tested with 20.19.2)
+- **PostgreSQL:** 14+ (tested with 16.9)
 ## Project layout 
 - Code: `src/main/java/com/synacy/trainee/leavemanagementsystem`
 - Config: `src/main/resources/application.properties`
