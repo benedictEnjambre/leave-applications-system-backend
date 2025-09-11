@@ -22,7 +22,7 @@ The Leave Applications System is a web application that allows employees to file
 ## Note:
 - Authentication and login are out of scope. Instead, a dropdown allows switching between HR, Manager, and Employee views.
 
-### Tech Stack
+## Tech Stack
  - Backend
  - Spring Boot
 #### Database
@@ -30,17 +30,17 @@ The Leave Applications System is a web application that allows employees to file
 
 
 
-### Dependencies
+## Dependencies
 #### Backend
 - Java 17+
 - Gradle
 - Spring Boot (Web, Data JPA, H2 Database)
 
-### Prerequisites
+## Prerequisites
 - JDK 17+
 - Node.js 18+ and Angular CLI for the frontend
 - PostgreSQL 14+
-### Project layout (backend)
+## Project layout (backend)
 - Code: `src/main/java/com/synacy/trainee/leavemanagementsystem`
 - Config: `src/main/resources/application.properties`
 - Build: `build.gradle`
@@ -74,14 +74,14 @@ chmod +x ./gradlew
 ```
 ## API overview
 Note: Paths may differ slightly if controllers define a different base path. Default shown as `/api/...`.
-### Users
+## Users
   - `GET /api/v1/user?max={max}&page={page}&manager={managerId}&totalCredits={credits}&remainingCredits={credits}` \- Fetch  paginated list of users.
 
   - `GET /api/user/{id}` \- get user
   - `POST /api/v1/user` \ -  create user
   - `PUT /api/user/{id}` \- update user
 
-### Leave Applications
+## Leave Applications
   - `POST /api/v1/leave-application/{userId}` \-create a leave application
   - Body: `userId`, `startDate`, `endDate`, `reason`
   - `GET /api/v1/leave-application/{userId}/me?page=1&max=5` \- Fetch My Leave
