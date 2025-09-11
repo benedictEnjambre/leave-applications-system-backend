@@ -66,7 +66,7 @@ spring.jpa.show-sql=true
 spring.jpa.hibernate.ddl-auto=create
 ```
 ## Run the backend
-Explanation: Build and run with Gradle wrapper on Linux.
+Build and run with Gradle wrapper on Linux.
 ```bash
 chmod +x ./gradlew
 ./gradlew clean build
