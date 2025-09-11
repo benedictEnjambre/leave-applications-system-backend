@@ -100,6 +100,6 @@ Explanation: Run backend tests.
 ```bash
 ./gradlew test or ./gradlew build
 ```
-## Link the Angular frontend to the backend
-Set the API base URL in your Angular environment.
 
+## Repository Links
+- **Frontend (Angular)**: [leave-applications-system-frontend](https://github.com/benedictEnjambre/leave-applications-system-frontend)  
