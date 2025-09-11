@@ -32,7 +32,6 @@ public class LeaveApplication {
     @Column(nullable = false)
     private LocalDate endDate;
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LeaveStatus status = LeaveStatus.PENDING;
@@ -44,7 +43,6 @@ public class LeaveApplication {
     private int totalDays;
     private String remarks;
     private int availableCredits;
-
 
     public LeaveApplication(LocalDate startDate, LocalDate endDate, String remarks) {
         this.startDate = startDate;

@@ -3,7 +3,6 @@ package com.synacy.leavesmanagement.leaveapplication;
 import com.synacy.leavesmanagement.leavecredits.LeaveCreditsService;
 import com.synacy.leavesmanagement.user.User;
 import com.synacy.leavesmanagement.user.UserService;
-import com.synacy.leavesmanagement.web.apierror.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +38,7 @@ public class LeaveApplicationService {
                 request.getEndDate()
         );
 
-        int totalDays = leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
+        int remainingCredits = leaveCreditsService.deductCredits(employee.getId(), request.getStartDate(), request.getEndDate());
         User approver = determineApprover(employee);
 
         LeaveApplication leaveApplication = new LeaveApplication(
@@ -49,7 +48,7 @@ public class LeaveApplicationService {
         );
         leaveApplication.setEmployee(employee);
         leaveApplication.setApprover(approver);
-        leaveApplication.setAvailableCredits(totalDays);
+        leaveApplication.setAvailableCredits(remainingCredits);
         leaveApplication.setTotalDays(requestedDays);
 
         return leaveApplicationRepository.save(leaveApplication);
@@ -67,7 +66,7 @@ public class LeaveApplicationService {
     }
 
     public Page<LeaveApplication> fetchOwnLeaveApplication(Long userId, int page, int max) {
-        Pageable pageable = PageRequest.of(page - 1, max);
+        Pageable pageable = PageRequest.of(page - 1, max, Sort.by("id").descending());
 
         User employee = userService.getUserById(userId);
         if (employee.getRole() != Role.EMPLOYEE && employee.getRole() != Role.MANAGER && employee.getRole() != Role.HR) {
@@ -77,7 +76,7 @@ public class LeaveApplicationService {
     }
 
     public Page<LeaveApplication> fetchTeamLeaveApplication(Long userId, int page, int max) {
-        Pageable pageable = PageRequest.of(page - 1, max, Sort.by("startDate").descending());
+        Pageable pageable = PageRequest.of(page - 1, max, Sort.by("id").descending());
 
         User manager = userService.getUserById(userId);
         if (manager.getRole() != Role.MANAGER) {
@@ -99,7 +98,7 @@ public class LeaveApplicationService {
 
     public LeaveApplication cancelLeave(Long userId, Long leaveApplicationId) {
         LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("ID_NOT_FOUND", "Leave Application with id" + leaveApplicationId + "not found"));
+                .orElseThrow(() -> new LeaveApplicationNotFoundException("Leave Application with id " + leaveApplicationId + " not found"));
 
         if (!leaveApplication.getEmployee().getId().equals(userId)) {
             throw new AccessDeniedException("You can only cancel your own leave.");
@@ -136,7 +135,7 @@ public class LeaveApplicationService {
     private LeaveApplication processLeave(Long managerId, Long leaveApplicationId, LeaveStatus status) {
         User manager = userService.getUserById(managerId);
         LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveApplicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("ID_NOT_FOUND", "Leave Application with id" + leaveApplicationId + "not found"));
+                .orElseThrow(() -> new LeaveApplicationNotFoundException("Leave Application with id " + leaveApplicationId + " not found"));
 
         User employee = leaveApplication.getEmployee();
         boolean isHr = manager.getRole() == Role.HR;

@@ -1,5 +1,7 @@
 package com.synacy.leavesmanagement.web.apierror;
 
+import com.synacy.leavesmanagement.leaveapplication.AccessDeniedException;
+import com.synacy.leavesmanagement.leaveapplication.LeaveApplicationNotFoundException;
 import com.synacy.leavesmanagement.user.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,5 +41,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(status)
                 .body(new ApiErrorResponse(status.toString(), message));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidOperationException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidOperation(InvalidOperationException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(LeaveApplicationNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleLeaveApplicationNotFound(LeaveApplicationNotFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 }
