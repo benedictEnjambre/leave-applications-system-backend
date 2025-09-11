@@ -38,14 +38,14 @@ The Leave Applications System is a web application that allows employees to file
 
 ## Prerequisites
 - JDK 17+
-- Node.js 18+ and Angular CLI for the frontend
+- Node.js 18+ 
 - PostgreSQL 14+
-## Project layout (backend)
+## Project layout 
 - Code: `src/main/java/com/synacy/trainee/leavemanagementsystem`
 - Config: `src/main/resources/application.properties`
 - Build: `build.gradle`
 - Entry point: `LeavesmanagementApplication.java`
-### Database setup (PostgreSQL)
+## Database setup (PostgreSQL)
 Create  database
 
 ```bash
