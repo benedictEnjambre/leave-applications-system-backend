@@ -96,8 +96,10 @@ Note: Paths may differ slightly if controllers define a different base path. Def
 
 
 ## Testing
-Explanation: Run backend tests.
+Run backend tests
 ```bash
+bash
+
 ./gradlew test or ./gradlew build
 ```
 
