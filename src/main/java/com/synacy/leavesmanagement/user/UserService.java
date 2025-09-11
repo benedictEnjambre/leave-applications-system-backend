@@ -20,6 +20,7 @@ public class UserService {
     public UserService(UserRepository userRepository,  LeaveCreditsService leaveCreditsService) {
         this.userRepository = userRepository;
         this.leaveCreditsService = leaveCreditsService;
+        createInitialUser();
     }
 
     public User createUser(UserRequest userRequest) {
@@ -187,6 +188,18 @@ public class UserService {
 
     public Optional<User> getPrimaryHR() {
         return userRepository.findFirstByRoleOrderByIdAsc(Role.HR);
+    }
+
+    private void createInitialUser (){
+        LeaveCredits leaveCredits = leaveCreditsService.newUserCredits(0,0);
+        User user = new User(
+                "NICK",
+                Role.HR,
+                null,
+                leaveCredits
+        );
+
+        userRepository.save(user);
     }
 
 }
